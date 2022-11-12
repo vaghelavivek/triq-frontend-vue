@@ -1,4 +1,4 @@
-# velzon
+# Triq
 
 ## Project setup
 ```

@@ -10,7 +10,7 @@ import "prismjs/themes/prism.css";
 export default {
   data() {
     return {
-      title: "Users",
+      title: "Service",
       selectedCountry: "india",
     };
   },
@@ -54,13 +54,13 @@ export default {
 
         <div class="card mt-4">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1">Users</h4>
+            <h4 class="card-title mb-0 flex-grow-1">Services</h4>
             <div class="flex-shrink-0">
               <router-link
-                to="/admin/users/add"
+                to="/admin/services/add"
                 class="btn btn-primary waves-effect waves-light"
               >
-                Add User
+                Add Service
               </router-link>
             </div>
           </div>
@@ -72,9 +72,8 @@ export default {
                 <thead>
                   <tr>
                     <th scope="col">Date</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Phone</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Price</th>
                     <th scope="col">Country</th>
                     <th scope="col">Action</th>
                   </tr>
@@ -83,8 +82,7 @@ export default {
                   <tr>
                     <td>01-01-22</td>
                     <td>Bobby Davis</td>
-                    <td>bobbydavis@gmail.com</td>
-                    <td>7894561230</td>
+                    <td>789</td>
                     <td>India</td>
                     <td>
                       <a href="javascript:void(0);" class="link-success"
@@ -96,8 +94,7 @@ export default {
                   <tr>
                     <td>02-01-22</td>
                     <td>Hello World</td>
-                    <td>helloworld@gmail.com</td>
-                    <td>7894561230</td>
+                    <td>789</td>
                     <td>India</td>
                     <td>
                       <a href="javascript:void(0);" class="link-success"

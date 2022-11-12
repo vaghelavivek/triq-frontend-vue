@@ -1110,15 +1110,28 @@ export default [
   },
 
   {
-    path: "/users",
+    path: "/admin/users",
     name: "Users",
     meta: { title: "Users", authRequired: true },
     component: () => import("../views/pages/user/Index"),
   },
   {
-    path: "/users/add",
+    path: "/admin/users/add",
     name: "Add User",
     meta: { title: "Add User", authRequired: true },
     component: () => import("../views/pages/user/Add"),
+  },
+
+  {
+    path: "/admin/services",
+    name: "Services",
+    meta: { title: "Services", authRequired: true },
+    component: () => import("../views/pages/service/Index"),
+  },
+  {
+    path: "/admin/services/add",
+    name: "Add Service",
+    meta: { title: "Add Service", authRequired: true },
+    component: () => import("../views/pages/service/Add"),
   },
 ];
