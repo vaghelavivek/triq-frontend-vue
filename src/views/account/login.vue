@@ -164,9 +164,16 @@
                     <div class="" v-if="loginType == 'system'">
                       <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" placeholder="Enter email" v-model="email" />
-                        <div class="invalid-feedback">
-                          <span></span>
+                        <input type="email" class="form-control" id="email" placeholder="Enter email" v-model="user.email" 
+                          :class="{
+                          'is-invalid': isSubmited && v$.user.email.$error,
+                        }"/>
+                        <div
+                          v-for="(item, index) in v$.user.email.$errors"
+                          :key="index"
+                          class="invalid-feedback"
+                        >
+                          <span v-if="item.$message">{{ item.$message }}</span>
                         </div>
                       </div>
                       <div class="mb-3">
@@ -176,20 +183,30 @@
                         </div>
                         <label class="form-label" for="password-input">Password</label>
                         <div class="position-relative auth-pass-inputgroup mb-3">
-                          <input type="password" v-model="password" class="form-control pe-5" placeholder="Enter password"
-                            id="password-input" />
+                          <input :type="showpass ? 'password' : 'text'" v-model="user.password" class="form-control pe-5" placeholder="Enter password"
+                            id="password-input"  :class="{
+                            'is-invalid': isSubmited && v$.user.password.$error,
+                          }"/>
                           <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
                             type="button" id="password-addon">
-                            <i class="ri-eye-fill align-middle"></i>
+                            <i class="ri-eye-line align-middle" v-if="!showpass" @click="showpass=true"></i>
+                            <i class="ri-eye-off-line align-middle" v-if="showpass" @click="showpass=false"></i>
                           </button>
-                          <div class="invalid-feedback">
-                            <span></span>
+                          <div
+                            v-for="(item, index) in v$.user.password.$errors"
+                            :key="index"
+                            class="invalid-feedback"
+                          >
+                            <span v-if="item.$message">{{ item.$message }}</span>
                           </div>
                         </div>
                       </div>
                       <div class="mt-4">
-                        <button class="btn btn-success w-100" type="submit" @click="signinapi">
+                        <button class="btn btn-success w-100 align-items-center d-flex justify-content-center" type="submit" :disabled="disabled" @click="signinapi">
                           Sign In
+                          <div class="spinner-border loader-setup" role="status" v-if="loader">
+                              <span class="sr-only">Loading...</span>
+                            </div>
                         </button>
                       </div>
                     </div>
@@ -200,8 +217,18 @@
                                 <button class="btn btn-light border" type="button" data-bs-toggle="dropdown"
                                   aria-expanded="false"><img src="@/assets/images/flags/in.svg" alt="flag img" height="20"
                                     class="country-flagimg rounded"><span class="ms-2 country-codeno" id="country-codeno">+ 91</span></button>
-                                <input type="text" class="form-control rounded-end flag-input" v-model="phone" placeholder="Enter number"
-                                  oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" />
+                                <input type="text" class="form-control rounded-end flag-input" v-model="firebase.phone" placeholder="Enter number"
+                                  oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');"
+                                    :class="{
+                                    'is-invalid': isSubmited && v$.firebase.phone.$error,
+                                  }" />
+                                  <div
+                                  v-for="(item, index) in v$.firebase.phone.$errors"
+                                  :key="index"
+                                  class="invalid-feedback"
+                                >
+                                  <span v-if="item.$message">{{ item.$message }}</span>
+                                </div>
                                 <div class="dropdown-menu w-100">
                                   <div class="p-2 px-3 pt-1 searchlist-input">
                                     <input type="text" class="form-control form-control-sm border search-countryList"
@@ -212,8 +239,11 @@
                               </div>
                         </div>
                         <div class="mt-4">
-                          <button class="btn btn-success w-100" id="sign-in-button" type="button" @click="sendOtp">
+                          <button class="btn btn-success w-100 align-items-center d-flex justify-content-center" id="sign-in-button"  :disabled="disabled" type="button" @click="sendOtp">
                             Send Otp
+                             <div class="spinner-border loader-setup" role="status" v-if="loader">
+                              <span class="sr-only">Loading...</span>
+                            </div>
                           </button>
                         </div>
                       </div>
@@ -226,8 +256,11 @@
                         </div>
                       </div>
                         <div class="mt-4">
-                          <button class="btn btn-success w-100" id="sign-in-button" type="button" @click="verifyOtp"  oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
+                          <button class="btn btn-success w-100 align-items-center d-flex justify-content-center" id="sign-in-button" type="button" @click="verifyOtp"  oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
                             Verify Otp
+                            <div class="spinner-border loader-setup" role="status" v-if="loader">
+                              <span class="sr-only">Loading...</span>
+                            </div>
                           </button>
                         </div>
                       </div>
@@ -237,7 +270,7 @@
                         <h5 class="fs-13 mb-4 title">Sign In with</h5>
                       </div>
                     <div class="mt-1">
-                      <button class="btn btn-primary w-100" type="button" @click="updateLoginType">
+                      <button class="btn btn-primary w-100 align-items-center d-flex justify-content-center" type="button" @click="updateLoginType">
                         {{loginType != 'firebase' ? 'Sign with Phone' : 'Sign with Email and Password'}}
                       </button>
                     </div>
@@ -290,17 +323,17 @@
 import {
   required,
   email,
-  helpers
+  helpers,
+  numeric
 } from "@vuelidate/validators";
 import appConfig from "../../../app.config";
 import { getAuth, RecaptchaVerifier,signInWithPhoneNumber} from "firebase/auth";
-import {
-  authMethods,
-  authFackMethods,
-  notificationMethods,
-} from "@/state/helpers";
-
+import useVuelidate from "@vuelidate/core";
+import {mapActions} from 'vuex'
 export default {
+  setup() {
+    return { v$: useVuelidate() };
+  },
   page: {
     title: "Login",
     meta: [{
@@ -310,9 +343,13 @@ export default {
   },
   data() {
     return {
-      email: "",
-      password: "",
-      phone:"",
+      user:{
+        email: "",
+        password: "",
+      },
+      firebase:{
+        phone:"",
+      },
       otp:"",
       submitted: false,
       authError: null,
@@ -1854,29 +1891,84 @@ export default {
         }
       ],
       appVerifier:null,
-      isMessageSend:false
+      isMessageSend:false,
+      showpass:true,
+      isSubmited:false,
+      loader:false,
+      disabled:false
     };
   },
   validations: {
-    email: {
+    user:{
+      email: {
       required: helpers.withMessage("Email is required", required),
       email: helpers.withMessage("Please enter valid email", email),
+      },
+      password: {
+        required: helpers.withMessage("Password is required", required),
+      },
     },
-    password: {
-      required: helpers.withMessage("Password is required", required),
+    firebase:{
+        phone: {
+        required: helpers.withMessage("Phone is required", required),
+        numeric: helpers.withMessage("Please enter only numbers", numeric),
+        },
     },
+    otp: {
+        required: helpers.withMessage("Otp is required", required),
+        numeric: helpers.withMessage("Please enter only numbers", numeric),
+      },
   },
   computed: {
 
   },
   methods: {
-    ...authMethods,
-    ...authFackMethods,
-    ...notificationMethods,
-
+    ...mapActions({
+      systemLogin:'auth/systemLogin',
+      checkPhoneExist:'auth/checkPhoneExist',
+      generateToken:'auth/generateToken',
+    }),
     async signinapi() {
+      this.isSubmited = true;
+      this.v$.user.$touch();
+      if (this.v$.user.$invalid) {
+        return;
+      }
+      this.loader=true
+      this.disabled=true
+      this.systemLogin(this.user).then((res)=>{
+        this.loader=false
+        this.disabled=false
+        if(res.data.status){
+             this.$toast.open({
+              message: "Login Successfull.",
+              type: "success",
+            })
+          let user=res.data.data.user_data
+          if(user.role_id == 1){
+              this.$router.push({name:"Users"})
+          }else{
+            this.$router.push({name:"default"})
+          }
+        }else{
+          let message=res.data.message
+          this.$toast.open({
+              message: message,
+              type: "error",
+            })
+        }
+      }).catch(()=>{
+        this.loader=false
+        this.disabled=false
+        this.$toast.open({
+              message: 'Server Error',
+              type: "error",
+            })  
+      })
     },
     updateLoginType(){
+      this.isSubmited=false
+      this.v$.$reset();
       if(this.loginType == 'system'){
         this.loginType = 'firebase'
       }else{
@@ -1885,30 +1977,98 @@ export default {
     },
     sendOtp(){
       let vm=this
-      let code=document.getElementById('country-codeno').innerHTML;
-      let phoneNumber = code+this.phone
-       const auth = getAuth();
-       let appVerifier = this.appVerifier
-       signInWithPhoneNumber(auth, phoneNumber, appVerifier)
-          .then((confirmationResult) => {
-            window.confirmationResult=confirmationResult
-            vm.successMessage="Message Sent."
-            vm.isMessageSend=true
-          }).catch(() => {
-            vm.isMessageSend=false
-            vm.authError="Message not sent."
-          });
+      this.isSubmited = true;
+      this.v$.firebase.$touch();
+      if (this.v$.firebase.$invalid) {
+        return;
+      }
+      this.loader=true
+      this.disabled=true
+      this.checkPhoneExist(this.firebase).then((res)=>{
+        if(res.data.status){
+            let code=document.getElementById('country-codeno').innerHTML;
+            let phoneNumber = code+this.firebase.phone
+            const auth = getAuth();
+            let appVerifier = this.appVerifier
+            signInWithPhoneNumber(auth, phoneNumber, appVerifier)
+                .then((confirmationResult) => {
+                  window.confirmationResult=confirmationResult
+                  vm.$toast.open({
+                    message: 'Message sent.',
+                    type: "success",
+                  })
+                  vm.isMessageSend=true
+                  vm.isSubmited=false
+                  vm.loader=false
+                  vm.disabled=false
+                }).catch(() => {
+                  vm.isMessageSend=false
+                  vm.isSubmited=false
+                  vm.loader=false
+                  vm.disabled=false
+                  vm.$toast.open({
+                    message: 'Message not sent. Daily limit reached.',
+                    type: "error",
+                  })
+                });
+        }else{
+          this.$toast.open({
+              message: 'User not found.',
+              type: "error",
+            })
+            this.loader=false
+            this.disabled=false
+        }
+      }).catch(()=>{
+        this.loader=false
+        this.disabled=false
+        this.$toast.open({
+              message: 'Server Error',
+              type: "error",
+            })  
+      })
     },
-    onSignInSubmit(){
-
+    loginwithfirebase(data){
+        let payload={
+            token:data.accessToken,
+            phone:this.firebase.phone
+        }
+        this.generateToken(payload).then((res)=>{
+        this.loader=false
+        this.disabled=false
+        if(res.data.status){
+             this.$toast.open({
+              message: "Login Successfull.",
+              type: "success",
+            })
+          let user=res.data.data.user_data
+          if(user.role_id == 1){
+              this.$router.push({name:"Users"})
+          }else{
+            this.$router.push({name:"default"})
+          }
+        }else{
+          let message=res.data.message
+          this.$toast.open({
+              message: message,
+              type: "error",
+            })
+        }
+      }).catch(()=>{
+        this.loader=false
+        this.disabled=false
+        this.$toast.open({
+              message: 'Server Error',
+              type: "error",
+            })  
+      })
     },
     initReCaptcha(){
       setTimeout(()=>{
            const auth = getAuth();
           window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
               'size': 'invisible',
-              'callback': (response) => {
-                console.log(response)
+              'callback': () => {
                 // reCAPTCHA solved, allow signInWithPhoneNumber.
                 // ...
               },
@@ -1921,15 +2081,26 @@ export default {
       },1000)
     },
     verifyOtp(){
+      this.isSubmited = true;
+      this.v$.otp.$touch();
+      if (this.v$.otp.$invalid) {
+        return;
+      }
       let code=this.otp
-      console.log(code)
+      this.loader=true
+      this.disabled=true
       window.confirmationResult.confirm(code).then((result) => {
-        // User signed in successfully.
         const user = result.user;
-        console.log(user)
-        // ...
+        this.loginwithfirebase(user)
+        // console.log(user.UserImpl.accessToken,'sdsd')
+        // console.log(user.UserImpl,'sdsd')
       }).catch(() => {
-        this.authError="Invalid Otp."
+        this.loader=false
+        this.disabled=false
+        this.$toast.open({
+              message: 'Invalid Otp',
+              type: "error",
+            })  
       });
     }
   },
@@ -2042,3 +2213,10 @@ export default {
   }
 };
 </script>
+<style scoped>
+.loader-setup{
+  width: 18px;
+  height: 18px;
+  margin-left: 9px;
+}
+</style>

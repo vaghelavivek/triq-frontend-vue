@@ -54,10 +54,3 @@ export const actions = {
     return resp;
   },
 };
-// export default {
-//   namespaced: true,
-//   state,
-//   getters,
-//   actions,
-//   mutations,
-// };

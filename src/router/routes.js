@@ -6,17 +6,7 @@ export default [
     name: "login",
     component: () => import("../views/account/login.vue"),
     meta: {
-      title: "Login",
-      beforeResolve(routeTo, routeFrom, next) {
-        // If the user is already logged in
-        if (store.getters["auth/loggedIn"]) {
-          // Redirect to the home page instead
-          next({ name: "default" });
-        } else {
-          // Continue to the login page
-          next();
-        }
-      },
+      title: "Login"
     },
   },
   {
@@ -24,17 +14,7 @@ export default [
     name: "Register",
     component: () => import("../views/account/register.vue"),
     meta: {
-      title: "Register",
-      beforeResolve(routeTo, routeFrom, next) {
-        // If the user is already logged in
-        if (store.getters["auth/loggedIn"]) {
-          // Redirect to the home page instead
-          next({ name: "default" });
-        } else {
-          // Continue to the login page
-          next();
-        }
-      },
+      title: "Register"
     },
   },
   {
@@ -1112,26 +1092,26 @@ export default [
   {
     path: "/admin/users",
     name: "Users",
-    meta: { title: "Users", authRequired: true },
+    meta: { title: "Users", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/user/Index"),
   },
   {
     path: "/admin/users/add",
     name: "Add User",
-    meta: { title: "Add User", authRequired: true },
+    meta: { title: "Add User", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/user/Add"),
   },
 
   {
     path: "/admin/services",
     name: "Services",
-    meta: { title: "Services", authRequired: true },
+    meta: { title: "Services", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/service/Index"),
   },
   {
     path: "/admin/services/add",
     name: "Add Service",
-    meta: { title: "Add Service", authRequired: true },
+    meta: { title: "Add Service", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/service/Add"),
   },
 ];

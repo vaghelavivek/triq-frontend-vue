@@ -1,93 +1,67 @@
-import { getFirebaseBackend } from '../../authUtils.js'
-
+import axios from '@/plugins/apiServices.js' 
+import router from '@/router';
 export const state = {
-    currentUser: sessionStorage.getItem('authUser'),
-}
+  authenticated:false,
+  user:'',
+  idToken:'',
+};
 
+
+// mutations
 export const mutations = {
-    SET_CURRENT_USER(state, newValue) {
-        state.currentUser = newValue
-        saveState('auth.currentUser', newValue)
-    }
+ SET_AUTHENTICATED (state, value) {
+        state.authenticated = value
+  },
+  SET_USER (state, value) {
+      state.user = value
+  },
+  SET_ID_TOKEN(state, value){
+      state.idToken = value
+  }
 }
 
+// getters
 export const getters = {
-    // Whether the user is currently logged in.
-    loggedIn(state) {
-        return !!state.currentUser
-    }
+  authenticated(state){
+      return state.authenticated
+  },
+  user(state){
+      return state.user
+  },
+  getIdToken(state){
+      return state.idToken
+  }
 }
-
+//actions
 export const actions = {
-    // This is automatically run in `src/state/store.js` when the app
-    // starts, along with any other actions named `init` in other modules.
-    // eslint-disable-next-line no-unused-vars
-    init({ state, dispatch }) {
-        dispatch('validate')
-    },
-
-    // Logs in the current user.
-    logIn({ commit, dispatch, getters }, { email, password } = {}) {
-        if (getters.loggedIn) return dispatch('validate')
-
-        return getFirebaseBackend().loginUser(email, password).then((response) => {
-            const user = response
-            commit('SET_CURRENT_USER', user)
-            return user
-        });
-    },
-
-    // Logs out the current user.
-    logOut({ commit }) {
-        // eslint-disable-next-line no-unused-vars
-        commit('SET_CURRENT_USER', null)
-        return new Promise((resolve, reject) => {
-            // eslint-disable-next-line no-unused-vars
-            getFirebaseBackend().logout().then((response) => {
-                resolve(true);
-            }).catch((error) => {
-                reject(this._handleError(error));
-            })
-        });
-    },
-
-    // register the user
-    register({ commit, dispatch, getters }, { username, email, password } = {}) {
-        if (getters.loggedIn) return dispatch('validate')
-
-        return getFirebaseBackend().registerUser(username, email, password).then((response) => {
-            const user = response
-            commit('SET_CURRENT_USER', user)
-            return user
-        });
-    },
-
-    // register the user
-    // eslint-disable-next-line no-unused-vars
-    resetPassword({ commit, dispatch, getters }, { email } = {}) {
-        if (getters.loggedIn) return dispatch('validate')
-
-        return getFirebaseBackend().forgetPassword(email).then((response) => {
-            const message = response.data
-            return message
-        });
-    },
-
-    // Validates the current user's token and refreshes it
-    // with new data from the API.
-    // eslint-disable-next-line no-unused-vars
-    validate({ commit, state }) {
-        if (!state.currentUser) return Promise.resolve(null)
-        const user = getFirebaseBackend().getAuthenticatedUser();
-        commit('SET_CURRENT_USER', user)
-        return user;
-    },
-}
-
-// ===
-// Private helpers
-// ===
-
-function saveState(key, state) {
-    window.sessionStorage.setItem(key, JSON.stringify(state))
+  /** User login  **/
+  async systemLogin({ commit }, data) {
+    let resp = await axios.post('/api/login', data)
+    if(resp.data.status==true){
+      commit('SET_USER',resp.data.data.user_data)
+      commit('SET_ID_TOKEN',resp.data.data.accesstoken)
+      commit('SET_AUTHENTICATED',true)
+    }
+    return resp;
+  },
+  logout({ commit }){
+      commit('SET_USER','')
+      commit('SET_ID_TOKEN','')
+      commit('SET_AUTHENTICATED',false)
+      router.push({name: 'login'})
+  },
+  // eslint-disable-next-line no-empty-pattern
+  async checkPhoneExist({}, data) {
+    let resp = await axios.post('/api/get-user-by-phone', data)
+    return resp;
+  },
+  async generateToken({ commit }, data) {
+    let resp = await axios.post('/api/login-using-firebase', data)
+    if(resp.data.status==true){
+      commit('SET_USER',resp.data.data.user_data)
+      commit('SET_ID_TOKEN',resp.data.data.accesstoken)
+      commit('SET_AUTHENTICATED',true)
+    }
+    return resp;
+  },
 }

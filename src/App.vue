@@ -11,3 +11,8 @@ export default {
   }
 }
 </script>
+<style>
+.v-toast__item{
+  min-width: 220px !important;
+}
+</style>

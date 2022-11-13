@@ -1,13 +1,13 @@
 import { createStore } from 'vuex'
-
+import VuexPersistence from 'vuex-persist'
 import modules from './modules'
-
+// console.log(modules.auth)
+const vuexLocal = new VuexPersistence({
+  modules: ['auth'],
+  })
 const store = createStore({
   modules,
-  // Enable strict mode in development to get a warning
-  // when mutating state outside of a mutation.
-  // https://vuex.vuejs.org/guide/strict.html
-  strict: process.env.NODE_ENV !== 'production',
+  plugins:[vuexLocal.plugin],
 })
 
 export default store

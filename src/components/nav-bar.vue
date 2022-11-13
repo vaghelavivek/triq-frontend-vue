@@ -2,7 +2,7 @@
 import {
   SimpleBar
 } from "simplebar-vue3";
-
+import { mapActions, mapGetters} from 'vuex'
 import i18n from "../i18n";
 
 /**
@@ -59,7 +59,9 @@ export default {
   },
 
   methods: {
-
+    ...mapActions({
+      doLogout:'auth/logout'
+    }),
     isCustomDropdown() {
       //Search bar
       var searchOptions = document.getElementById("search-close-options");
@@ -238,9 +240,16 @@ export default {
           });
         });
       }
+    },
+    logout(){
+        this.doLogout();
     }
   },
-  computed: {},
+  computed: {
+    ...mapGetters({
+      getUserData:"auth/user"
+    })
+  },
   mounted() {
     document.addEventListener("scroll", function () {
       var pageTopbar = document.getElementById("page-topbar");
@@ -995,14 +1004,14 @@ export default {
                 <img class="rounded-circle header-profile-user" src="@/assets/images/users/avatar-1.jpg"
                   alt="Header Avatar" />
                 <span class="text-start ms-xl-2">
-                  <span class=" d-none d-xl-inline-block ms-1 fw-medium user-name-text">Anna Adame</span>
-                  <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">Founder</span>
+                  <span class=" d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{getUserData.name}}</span>
+                  <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">{{getUserData.role_id == 1 ? 'Super Admin' : 'User'}}</span>
                 </span>
               </span>
             </button>
             <div class="dropdown-menu dropdown-menu-end">
               <!-- item-->
-              <h6 class="dropdown-header">Welcome Anna!</h6>
+              <h6 class="dropdown-header">Welcome {{getUserData.name}}!</h6>
               <router-link class="dropdown-item" to="/pages/profile"><i
                   class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
                 <span class="align-middle">Profile</span>
@@ -1033,7 +1042,7 @@ export default {
                   class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i>
                 <span class="align-middle">Lock screen</span>
               </router-link>
-              <a class="dropdown-item" href="/logout"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
+              <a class="dropdown-item cursor-pointer" @click="logout()"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
                 <span class="align-middle" data-key="t-logout">Logout</span></a>
             </div>
           </div>

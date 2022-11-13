@@ -34,7 +34,8 @@ AOS.init({
     easing: 'ease-out-back',
     duration: 1000
 });
-
+import ToastPlugin from 'vue-toast-notification';
+import 'vue-toast-notification/dist/theme-sugar.css';
 createApp(App)
     .use(store)
     .use(router)
@@ -44,4 +45,9 @@ createApp(App)
     .use(Maska)
     .use(Particles)
     .use(i18n)
+    .use(ToastPlugin,{
+        position: 'top-right',
+        duration: 2000,
+        dismissible: true
+    })
     .use(vClickOutside).mount('#app');
