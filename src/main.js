@@ -16,28 +16,20 @@ import Particles from "particles.vue3";
 
 import '@/assets/scss/config/saas/app.scss';
 import '@vueform/slider/themes/default.css';
+import { initializeApp } from "firebase/app";
+const firebaseConfig = {
+  apiKey: process.env.VUE_APP_FIREBASE_API_KEY,
+  authDomain: process.env.VUE_APP_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.VUE_APP_FIREBASE_DATABASE_URL,
+  projectId: process.env.VUE_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VUE_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VUE_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VUE_APP_FIREBASE_APP_ID,
+  measurementId: process.env.VUE_APP_FIREBASE_MEASUREMENT_ID
+};
 
-// FakeBackend authentication
-// import { configureFakeBackend } from './helpers/fake-backend';
-// configureFakeBackend();
-
-
-// Firebase authentication
-// import { initFirebaseBackend } from './authUtils';
-
-// const firebaseConfig = {
-//     apiKey: process.env.VUE_APP_APIKEY,
-//     authDomain: process.env.VUE_APP_AUTHDOMAIN,
-//     databaseURL: process.env.VUE_APP_VUE_APP_DATABASEURL,
-//     projectId: process.env.VUE_APP_PROJECTId,
-//     storageBucket: process.env.VUE_APP_STORAGEBUCKET,
-//     messagingSenderId: process.env.VUE_APP_MEASUREMENTID
-// };
-
-// initFirebaseBackend(firebaseConfig);
-
-
-
+// Initialize Firebase
+initializeApp(firebaseConfig);
 AOS.init({
     easing: 'ease-out-back',
     duration: 1000
