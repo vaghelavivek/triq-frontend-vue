@@ -108,9 +108,15 @@
                 <span data-key="t-menu"> {{ $t("t-menu") }}</span>
               </li>
               <li class="nav-item">
-                <router-link to="/users" class="nav-link" data-key="t-calendar">
+                <router-link to="/admin/users" class="nav-link" data-key="t-calendar">
                   <i class="bx bxs-user"></i>
                   <span data-key="t-dashboards"> User</span>
+                </router-link>
+              </li>
+              <li class="nav-item">
+                <router-link to="/admin/services" class="nav-link" data-key="t-calendar">
+                  <i class="bx bxs-user"></i>
+                  <span data-key="t-dashboards">Service</span>
                 </router-link>
               </li>
 

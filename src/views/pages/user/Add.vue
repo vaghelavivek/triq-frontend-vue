@@ -1,6 +1,8 @@
 <script>
 import Layout from "../../../layouts/main.vue";
 import PageHeader from "@/components/page-header";
+import Multiselect from "@vueform/multiselect";
+import "@vueform/multiselect/themes/default.css";
 
 import "prismjs";
 import "prismjs/themes/prism.css";
@@ -14,6 +16,7 @@ export default {
   components: {
     Layout,
     PageHeader,
+    Multiselect
   },
   mounted() {},
 };
@@ -26,7 +29,7 @@ export default {
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1">Add User</h4>
+            <h4 class="card-title mb-0 flex-grow-1">Add Service</h4>
           </div>
           <!-- end card header -->
 
@@ -249,11 +252,15 @@ export default {
                     >
                   </div>
                   <div class="col-lg-9">
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="country"
-                      placeholder="Enter Country"
+                    <Multiselect
+                      v-model="selectedCountry"
+                      :close-on-select="true"
+                      :searchable="true"
+                      :create-option="true"
+                      :options="[
+                        { value: 'india', label: 'India' },
+                        { value: 'arabic', label: 'Arabic' },
+                      ]"
                     />
                   </div>
                 </div>
