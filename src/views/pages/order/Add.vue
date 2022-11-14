@@ -89,6 +89,7 @@ export default {
       if (this.v$.$invalid) {
         return;
       }
+      console.log('order_documents',this.order.order_documents)
       var formdata = new FormData();
       formdata.append("id", this.order.id);
       formdata.append("user_id", this.order.user_id);
@@ -98,17 +99,16 @@ export default {
       formdata.append("final_amount", this.order.final_amount);
       formdata.append("payment_status", this.order.payment_status);
       formdata.append("service_status", this.order.service_status);
-      formdata.append(
-        "order_documents",
-        JSON.stringify(this.order.order_documents)
-      );
+      this.order.order_documents.map((doc) => {
+        formdata.append("order_documents_"+doc.service_documents_id,doc.uploaded_file);
+        });
       this.addOrder(formdata)
         .then((res) => {
           if (res.data.status) {
             this.isSubmited = false;
             this.clearOrder();
             this.$toast.success("Order added Successfully");
-            this.$router.push({ name: "Services" });
+            this.$router.push({ name: "Orders" });
           }
         })
         .catch((error) => {
@@ -209,6 +209,7 @@ export default {
             var nameDocument = [];
             serviceDocument.map((doc) => {
               var docData = {
+                id: null,
                 service_documents_id: doc.id,
                 service_documents_name: doc.name,
                 uploaded_file: null,
@@ -222,17 +223,18 @@ export default {
           console.log(e);
         });
     },
-    onOrderDocChange(e,service_documents_id){
+    onOrderDocChange(e, service_documents_id) {
       const file = e.target.files[0];
       if (file) {
-        var fileUrl = URL.createObjectURL(file);
-        this.order.order_documents.map((order_doc) =>{
-          if(order_doc.service_documents_id == service_documents_id){
-            order_doc.uploaded_file = fileUrl
+        var fileUrl = file;
+        this.order.order_documents.map((order_doc) => {
+          if (order_doc.service_documents_id == service_documents_id) {
+            order_doc.uploaded_file = fileUrl;
           }
-        })
+        });
       }
-    }
+      console.log('this.order.order_documents',this.order.order_documents)
+    },
   },
 };
 </script>
@@ -247,7 +249,6 @@ export default {
           <div class="card-header align-items-center d-flex">
             <h4 class="card-title mb-0 flex-grow-1">Add Order</h4>
           </div>
-          {{ order.order_documents }}
           <!-- end card header -->
           <div class="card-body">
             <div class="row">
@@ -256,7 +257,7 @@ export default {
                 <div class="row mb-4">
                   <div class="col-lg-3">
                     <label for="title" class="form-label"
-                      >User Name {{ order.user_id }}</label
+                      >User Name</label
                     >
                   </div>
                   <div
@@ -410,12 +411,25 @@ export default {
               </div>
               <div class="col-md-6">
                 <h3 class="mb-4">Order Document</h3>
-                <div class="row mb-4" v-for="(order_doc,index) in order.order_documents" :key="index">
+                <div
+                  class="row mb-4"
+                  v-for="(order_doc, index) in order.order_documents"
+                  :key="index"
+                >
                   <div class="col-lg-3">
-                    <label for="title" class="form-label">{{order_doc.service_documents_name}}</label>
+                    <label for="title" class="form-label">{{
+                      order_doc.service_documents_name
+                    }}</label>
                   </div>
                   <div class="col-lg-7">
-                    <input type="file" class="form-control" id="amount" @change="onOrderDocChange($event,order_doc.service_documents_id)"/>
+                    <input
+                      type="file"
+                      class="form-control"
+                      id="amount"
+                      @change="
+                        onOrderDocChange($event, order_doc.service_documents_id)
+                      "
+                    />
                   </div>
                   <div class="col-lg-2">
                     <a href="javascript:void(0);" class="download-icon"

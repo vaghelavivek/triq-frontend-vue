@@ -278,19 +278,19 @@ export default {
           <div class="navbar-brand-box horizontal-logo">
             <router-link to="/" class="logo logo-dark">
               <span class="logo-sm">
-                <img src="@/assets/images/logo-sm.png" alt="" height="22" />
+                <img src="@/assets/images/triq-logo.png" alt="" height="22" />
               </span>
               <span class="logo-lg">
-                <img src="@/assets/images/logo-dark.png" alt="" height="17" />
+                <img src="@/assets/images/triq-logo.png" alt="" height="40" />
               </span>
             </router-link>
 
             <router-link to="/" class="logo logo-light">
               <span class="logo-sm">
-                <img src="@/assets/images/logo-sm.png" alt="" height="22" />
+                <img src="@/assets/images/triq-logo.png" alt="" height="22" />
               </span>
               <span class="logo-lg">
-                <img src="@/assets/images/logo-light.png" alt="" height="17" />
+                <img src="@/assets/images/triq-logo.png" alt="" height="40" />
               </span>
             </router-link>
           </div>
@@ -420,8 +420,8 @@ export default {
           </form>
         </div>
 
-        <div class="d-flex align-items-center">
-          <div class="dropdown d-md-none topbar-head-dropdown header-item">
+        <div class="d-flex align-items-center outside-nav-class">
+          <!-- <div class="dropdown d-md-none topbar-head-dropdown header-item">
             <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
               id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <i class="bx bx-search fs-22"></i>
@@ -449,7 +449,6 @@ export default {
                 class="rounded" />
             </button>
             <div class="dropdown-menu dropdown-menu-end">
-              <!-- item-->
               <a href="javascript:void(0);" v-for="(entry, i) in languages" :key="`Lang${i}`" :value="entry"
                 @click="setLanguage(entry.language, entry.title, entry.flag)"
                 :class="{ active: lan === entry.language }" class="dropdown-item notify-item language py-2"
@@ -995,17 +994,17 @@ export default {
 
               </div>
             </div>
-          </div>
+          </div> -->
 
-          <div class="dropdown ms-sm-3 header-item topbar-user">
+          <div class="dropdown ms-sm-3 header-item topbar-user inside-topbar-dropdown">
             <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="d-flex align-items-center">
                 <img class="rounded-circle header-profile-user" src="@/assets/images/users/avatar-1.jpg"
                   alt="Header Avatar" />
                 <span class="text-start ms-xl-2">
-                  <span class=" d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{getUserData.name}}</span>
-                  <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">{{getUserData.role_id == 1 ? 'Super Admin' : 'User'}}</span>
+                  <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text text-white font-weight-bold ">{{getUserData.name}}</span>
+                  <span class="d-none d-xl-block ms-1 fs-12 text-white ">{{getUserData.role_id == 1 ? 'Super Admin' : 'User'}}</span>
                 </span>
               </span>
             </button>
@@ -1016,7 +1015,7 @@ export default {
                   class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
                 <span class="align-middle">Profile</span>
               </router-link>
-              <router-link class="dropdown-item" to="/chat">
+              <!-- <router-link class="dropdown-item" to="/chat">
                 <i class=" mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i>
                 <span class="align-middle">Messages</span>
               </router-link>
@@ -1041,7 +1040,7 @@ export default {
               <router-link class="dropdown-item" to="/auth/lockscreen-basic"><i
                   class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i>
                 <span class="align-middle">Lock screen</span>
-              </router-link>
+              </router-link> -->
               <a class="dropdown-item cursor-pointer" @click="logout()"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
                 <span class="align-middle" data-key="t-logout">Logout</span></a>
             </div>
@@ -1051,3 +1050,11 @@ export default {
     </div>
   </header>
 </template>
+<style scoped>
+.outside-nav-class{
+  background-color: #88CC23;
+}
+.inside-topbar-dropdown{
+  background-color: #0076CE;
+}
+</style>

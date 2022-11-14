@@ -99,7 +99,8 @@ $header-bg:                                      var(--#{$prefix}header-bg);
 $header-item-color:                              var(--#{$prefix}header-item-color);
 
 // Topbar - Dark
-$header-bg-dark:                                 var(--#{$prefix}header-bg-dark);
+// $header-bg-dark:                                 var(--#{$prefix}header-bg-dark);
+$header-bg-dark:                                 $white;
 $header-item-color-dark:                         var(--#{$prefix}header-item-color-dark); 
 
 // Topbar Search
@@ -183,7 +184,8 @@ $grays: (
 // fusv-enable
 
 // scss-docs-start color-variables
-$blue:       #6691e7;
+// $blue:       #6691e7;
+$blue:       #0076CE;
 $indigo:     #405189;
 $purple:     #865ce2;
 $pink:       #f672a7;

@@ -14,7 +14,10 @@ export default {
   data() {
     return {
       title: "Service",
-      selectedCountry: "india",
+      selectedCountry: "",
+      page: 1,
+      perPage: 10,
+      pages: [],
     };
   },
   components: {
@@ -26,9 +29,21 @@ export default {
     ...mapGetters({
       getServices: "service/getServices",
     }),
+    displayedPosts() {
+        return this.paginate(this.getServices);
+      },
+    resultQuery() {
+      if (this.selectedCountry) {
+        const search = this.selectedCountry.toLowerCase();
+        return this.displayedPosts.filter(user => user.country === search)
+      } else {
+        return this.displayedPosts;
+      }
+    },
   },
-  mounted() {
-    this.setServices();
+  async mounted() {
+    await this.setServices();
+    await this.setPages()
   },
   methods: {
     ...mapActions({
@@ -50,14 +65,30 @@ export default {
       }).then((result) => {
         if (result.value) {
           this.deleteService(id)
-            .then((response) => {
-              console.log(response);
+            .then(() => {
+                this.$toast.open({
+                  message: "Service Deleted.",
+                  type: "success",
+                })
             })
             .catch(() => {
               Swal.fire("Oops...", "Something went wrong", "error");
             });
         }
       });
+    },
+    setPages() {
+      let numberOfPages = Math.ceil(this.getServices.length / this.perPage);
+      for (let index = 1; index <= numberOfPages; index++) {
+        this.pages.push(index);
+      }
+    },
+    paginate(data) {
+      let page = this.page;
+      let perPage = this.perPage;
+      let from = page * perPage - perPage;
+      let to = page * perPage;
+      return data.slice(from, to);
     },
   },
 };
@@ -78,7 +109,7 @@ export default {
                 :create-option="true"
                 :options="[
                   { value: 'india', label: 'India' },
-                  { value: 'arabic', label: 'Arabic' },
+                  { value: 'uae', label: 'UAE' },
                 ]"
               />
             </div>
@@ -107,7 +138,7 @@ export default {
           <!-- end card header -->
 
           <div class="card-body">
-            <div class="table-responsive">
+            <div class="table-responsive table-card">
               <table class="table align-middle table-nowrap mb-0">
                 <thead>
                   <tr>
@@ -119,7 +150,7 @@ export default {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(service, index) in getServices" :key="index">
+                  <tr v-for="(service, index) in resultQuery" :key="index">
                     <td>{{ getDate(service.created_at) }}</td>
                     <td>{{ service.title }}</td>
                     <td>{{ service.price }}</td>
@@ -146,6 +177,25 @@ export default {
                 </tbody>
               </table>
             </div>
+            <div class="d-flex justify-content-end pt-4">
+                <div class="pagination-wrap hstack gap-2">
+                  <a class="page-item pagination-prev disabled" href="#" v-if="page != 1" @click="page--">
+                    Previous
+                  </a>
+                  <ul class="pagination listjs-pagination mb-0">
+                    <li :class="{
+                                  active: pageNumber == page,
+                                  disabled: pageNumber == '...',
+                                }" v-for="(pageNumber, index) in pages.slice(page - 1, page + 5)" :key="index"
+                      @click="page = pageNumber">
+                      <a class="page" href="#">{{ pageNumber }}</a>
+                    </li>
+                  </ul>
+                  <a class="page-item pagination-next" href="#" @click="page++" v-if="page < pages.length">
+                    Next
+                  </a>
+                </div>
+              </div>
           </div>
           <!-- end card-body -->
         </div>

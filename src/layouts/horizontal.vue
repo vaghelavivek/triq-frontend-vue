@@ -75,19 +75,19 @@
           <!-- Dark Logo-->
           <router-link to="/" class="logo logo-dark">
             <span class="logo-sm">
-              <img src="@/assets/images/logo-sm.png" alt="" height="22" />
+              <img src="@/assets/images/triq-logo.png" alt="" height="22" />
             </span>
             <span class="logo-lg">
-              <img src="@/assets/images/logo-dark.png" alt="" height="17" />
+              <img src="@/assets/images/triq-logo.png" alt="" height="40" />
             </span>
           </router-link>
           <!-- Light Logo-->
           <router-link to="/" class="logo logo-light">
             <span class="logo-sm">
-              <img src="@/assets/images/logo-sm.png" alt="" height="22" />
+              <img src="@/assets/images/triq-logo.png" alt="" height="22" />
             </span>
             <span class="logo-lg">
-              <img src="@/assets/images/logo-light.png" alt="" height="17" />
+              <img src="@/assets/images/triq-logo.png" alt="" height="40" />
             </span>
           </router-link>
           <button type="button" class="
@@ -126,7 +126,7 @@
                 </router-link>
               </li>
 
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
                   aria-expanded="false" aria-controls="sidebarDashboards">
                   <i class="bx bxs-dashboard"></i>
@@ -167,7 +167,7 @@
                   </ul>
                 </div>
               </li>
-              <!-- end Dashboard Menu -->
+
               <li class="nav-item">
                 <a class="nav-link menu-link" href="#sidebarApps" data-bs-toggle="collapse" role="button"
                   aria-expanded="false" aria-controls="sidebarApps">
@@ -1302,7 +1302,7 @@
                     </li>
                   </ul>
                 </div>
-              </li>
+              </li> -->
             </ul>
           </div>
           <!-- Sidebar -->
