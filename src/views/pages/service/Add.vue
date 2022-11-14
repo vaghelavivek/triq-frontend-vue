@@ -24,6 +24,7 @@ export default {
         image: null,
         price: null,
         tenure: "monthly",
+        document_names: [],
       },
       isSubmited: false,
       imageData: null,
@@ -70,6 +71,7 @@ export default {
         image: null,
         price: null,
         tenure: "monthly",
+        document_names: [],
       };
     },
     saveService() {
@@ -84,19 +86,20 @@ export default {
       formdata.append("country", this.service.country);
       formdata.append("price", this.service.price);
       formdata.append("tenure", this.service.tenure);
-      formdata.append("image", this.imageData);
+      formdata.append("service_image", this.imageData);
+      formdata.append("document_names", JSON.stringify(this.service.document_names));
       this.addService(formdata)
         .then((res) => {
           if (res.data.status) {
             this.isSubmited = false;
             this.clearService();
-            this.$toast.success("Company added Successfully");
+            this.$toast.success("Service added Successfully");
+            this.$router.push({name:"Services"})
           }
         })
         .catch((error) => {
           console.log("error", error);
         });
-      console.log("save service");
     },
     onFileChange(e) {
       const file = e.target.files[0];
@@ -121,6 +124,16 @@ export default {
         }
       }
     },
+    addDocument() {
+      var doc = {
+        id: null,
+        name: null,
+      };
+      this.service.document_names.push(doc);
+    },
+    removeDocument(index){
+      this.service.document_names.splice(index,1);
+    }
   },
 };
 </script>
@@ -238,7 +251,7 @@ export default {
                   </div>
                   <div class="col-lg-9">
                     <input
-                      type="text"
+                      type="number"
                       class="form-control"
                       id="price"
                       placeholder="Enter price"
@@ -311,21 +324,38 @@ export default {
                     <button
                       type="submit"
                       class="btn btn-primary ml-4"
-                      @click="saveService"
+                      @click="addDocument"
                     >
                       Add More Document
                     </button>
                   </div>
 
-                  <div class="mt-4">
-                    <div class="col-6">
+                  <div class="row mt-4">
+                    <div
+                      class="col-6 d-flex"
+                      v-for="(names, index) in service.document_names"
+                      :key="index"
+                    >
                       <input
                         type="text"
                         class="form-control"
                         id="price"
-                        placeholder="Enter price"
-                        v-model="service.price"
+                        :placeholder="`Document ${index + 1} Name`"
+                        v-model="service.document_names[index].name"
                       />
+
+                      <button
+                        class="
+                          btn btn-danger btn-md btn-icon
+                          waves-effect waves-light ms-2
+                        "
+                        type="button"
+                        @click="removeDocument(index)"
+                      >
+                        <div class="btn-content">
+                          <i class="ri-delete-bin-5-line"></i>
+                        </div>
+                      </button>
                     </div>
                   </div>
                 </div>

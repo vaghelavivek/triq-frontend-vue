@@ -36,15 +36,15 @@ export const actions = {
     }
     return resp;
   },
-  async setCompanies({ commit }) {
-    let resp = await axios.get("/api/company/get-services");
+  async setServices({ commit }) {
+    let resp = await axios.get("/api/service/get-services");
     if (resp.data.status == true) {
       commit("SET_SERVICES", resp.data.data.services);
     }
     return resp;
   },
   async deleteService({ state, commit }, serviceId) {
-    let resp = await axios.get("/api/company/delete-service/"+serviceId);
+    let resp = await axios.get("/api/service/delete-service/"+serviceId);
     if (resp.data.status == true) {
       const newState = state.services.filter(function(ser) {
         return ser.id !== serviceId;

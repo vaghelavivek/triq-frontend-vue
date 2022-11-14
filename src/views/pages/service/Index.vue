@@ -6,6 +6,9 @@ import "@vueform/multiselect/themes/default.css";
 
 import "prismjs";
 import "prismjs/themes/prism.css";
+import { mapActions, mapGetters } from "vuex";
+import moment from "moment";
+import Swal from "sweetalert2";
 
 export default {
   data() {
@@ -19,7 +22,44 @@ export default {
     PageHeader,
     Multiselect,
   },
-  mounted() {},
+  computed: {
+    ...mapGetters({
+      getServices: "service/getServices",
+    }),
+  },
+  mounted() {
+    this.setServices();
+  },
+  methods: {
+    ...mapActions({
+      setServices: "service/setServices",
+      deleteService: "service/deleteService",
+    }),
+    getDate(date) {
+      return moment(date).format("MM/DD/YY");
+    },
+    deletesServiceData(id) {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonColor: "#f46a6a",
+        confirmButtonColor: "#34c38f",
+        confirmButtonText: "Yes, delete it!",
+      }).then((result) => {
+        if (result.value) {
+          this.deleteService(id)
+            .then((response) => {
+              console.log(response);
+            })
+            .catch(() => {
+              Swal.fire("Oops...", "Something went wrong", "error");
+            });
+        }
+      });
+    },
+  },
 };
 </script>
 
@@ -79,28 +119,28 @@ export default {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>01-01-22</td>
-                    <td>Bobby Davis</td>
-                    <td>789</td>
-                    <td>India</td>
-                    <td>
+                  <tr v-for="(service, index) in getServices" :key="index">
+                    <td>{{ getDate(service.created_at) }}</td>
+                    <td>{{ service.title }}</td>
+                    <td>{{ service.price }}</td>
+                    <td class="text-capitalize">{{ service.country }}</td>
+                    <!-- <td>
                       <a href="javascript:void(0);" class="link-success"
                         >View Details
                         <i class="ri-arrow-right-line align-middle"></i
                       ></a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>02-01-22</td>
-                    <td>Hello World</td>
-                    <td>789</td>
-                    <td>India</td>
+                    </td> -->
                     <td>
-                      <a href="javascript:void(0);" class="link-success"
-                        >View Details
-                        <i class="ri-arrow-right-line align-middle"></i
-                      ></a>
+                      <div class="hstack gap-3 flex-wrap">
+                        <a href="javascript:void(0);" class="link-success fs-15"
+                          ><i class="ri-edit-2-line"></i></a
+                        ><a
+                          href="javascript:void(0);"
+                          @click="deletesServiceData(service.id)"
+                          class="link-danger fs-15"
+                          ><i class="ri-delete-bin-line"></i
+                        ></a>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
