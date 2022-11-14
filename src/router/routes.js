@@ -1097,11 +1097,16 @@ export default [
   },
   {
     path: "/admin/users/add",
-    name: "Add User",
+    name: "AddUser",
     meta: { title: "Add User", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/user/Add"),
   },
-
+  {
+    path: "/admin/users/edit/:id",
+    name: "EditUser",
+    meta: { title: "Edit User", authRequired: true,isSuperAdmin:true},
+    component: () => import("../views/pages/user/Add"),
+  },
   {
     path: "/admin/services",
     name: "Services",

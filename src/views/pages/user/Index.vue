@@ -3,15 +3,19 @@ import Layout from "../../../layouts/main.vue";
 import PageHeader from "@/components/page-header";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
-
+import {mapActions,mapGetters} from 'vuex'
 import "prismjs";
 import "prismjs/themes/prism.css";
-
+import moment from "moment";
+import Swal from "sweetalert2";
 export default {
   data() {
     return {
       title: "Users",
-      selectedCountry: "india",
+      selectedCountry: "",
+      page: 1,
+      perPage: 10,
+      pages: [],
     };
   },
   components: {
@@ -19,7 +23,80 @@ export default {
     PageHeader,
     Multiselect,
   },
-  mounted() {},
+  computed:{
+    ...mapGetters({
+      getUsers:'users/getUsers'
+    }),
+    displayedPosts() {
+        return this.paginate(this.getUsers);
+      },
+      resultQuery() {
+        if (this.selectedCountry) {
+          const search = this.selectedCountry.toLowerCase();
+          return this.displayedPosts.filter(user => user.country === search)
+        } else {
+          return this.displayedPosts;
+        }
+  }
+  },
+  methods:{
+    ...mapActions({
+        fetchUsers:'users/fetchUsers',
+        deleteUser:'users/deleteUser',
+    }),
+    getAllUsers(page){
+      this.fetchUsers(page)
+    },
+    setPages() {
+      let numberOfPages = Math.ceil(this.getUsers.length / this.perPage);
+      for (let index = 1; index <= numberOfPages; index++) {
+        this.pages.push(index);
+      }
+    },
+    paginate(data) {
+      let page = this.page;
+      let perPage = this.perPage;
+      let from = page * perPage - perPage;
+      let to = page * perPage;
+      return data.slice(from, to);
+    },
+    getDate(date) {
+      return moment(date).format("MM/DD/YYYY");
+    },
+    deleteUserData(user) {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        cancelButtonColor: "#f46a6a",
+        confirmButtonColor: "#34c38f",
+        confirmButtonText: "Yes, delete it!",
+      }).then((result) => {
+        if (result.value) {
+          this.deleteUser(user)
+            .then(() => {
+                this.$toast.open({
+                  message: "User Deleted.",
+                  type: "success",
+                })
+            })
+            .catch(() => {
+              Swal.fire("Oops...", "Something went wrong", "error");
+            });
+        }
+      });
+    },
+    editUser(id){
+       this.$router.push({
+            name: 'EditUser',
+            params: {id: id},
+          });
+    }
+  },
+  async mounted() {
+    this.getAllUsers()
+  },
 };
 </script>
 
@@ -67,48 +144,72 @@ export default {
           <!-- end card header -->
 
           <div class="card-body">
-            <div class="table-responsive">
-              <table class="table align-middle table-nowrap mb-0">
-                <thead>
+            <div class="table-responsive table-card">
+              <table class="table align-middle table-nowrap" id="customerTable">
+                <thead class="table-light text-muted">
                   <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Phone</th>
-                    <th scope="col">Country</th>
+                    <th class="sort" data-sort="currency_name" scope="col">ID</th>
+                    <th class="sort" data-sort="current_value" scope="col">
+                      Name
+                    </th>
+                    <th class="sort" data-sort="pairs" scope="col">Email</th>
+                    <th class="sort" data-sort="high" scope="col">Role</th>
+                    <th class="sort" data-sort="low" scope="col">Phone</th>
+                    <th class="sort" data-sort="low" scope="col">Date</th>
+                    <th class="sort" data-sort="market_cap" scope="col">
+                      Country
+                    </th>
                     <th scope="col">Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>01-01-22</td>
-                    <td>Bobby Davis</td>
-                    <td>bobbydavis@gmail.com</td>
-                    <td>7894561230</td>
-                    <td>India</td>
-                    <td>
-                      <a href="javascript:void(0);" class="link-success"
-                        >View Details
-                        <i class="ri-arrow-right-line align-middle"></i
-                      ></a>
+                <!--end thead-->
+                <tbody class="list form-check-all">
+                  <tr v-for="(data, index) of resultQuery" :key="index">
+                    <td class="id">
+                      {{ data.id }}
                     </td>
-                  </tr>
-                  <tr>
-                    <td>02-01-22</td>
-                    <td>Hello World</td>
-                    <td>helloworld@gmail.com</td>
-                    <td>7894561230</td>
-                    <td>India</td>
+                    <td>{{ data.name }}</td>
+                    <td class="pairs">{{ data.email }}</td>
+                    <td class="high">{{ data.role_id == 1 ? 'Super Admin' :  data.role_id == 2 ? 'Team' : 'User'}}</td>
+                    <td class="low">{{ data.phone }}</td>
+                    <td>{{ getDate(data.created_at) }}</td>
+                    <td class="market_cap">{{ data.country }}</td>
                     <td>
-                      <a href="javascript:void(0);" class="link-success"
-                        >View Details
-                        <i class="ri-arrow-right-line align-middle"></i
-                      ></a>
+                      <div class="hstack gap-3 flex-wrap">
+                        <a href="javascript:void(0);" @click="editUser(data.id)" class="link-success fs-15"
+                          ><i class="ri-edit-2-line"></i></a
+                        ><a
+                          href="javascript:void(0);"
+                          @click="deleteUserData(data)"
+                          class="link-danger fs-15"
+                          ><i class="ri-delete-bin-line"></i
+                        ></a>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
+                <!--end tbody-->
               </table>
             </div>
+              <div class="d-flex justify-content-end mt-3">
+                <div class="pagination-wrap hstack gap-2">
+                  <a class="page-item pagination-prev disabled" href="#" v-if="page != 1" @click="page--">
+                    Previous
+                  </a>
+                  <ul class="pagination listjs-pagination mb-0">
+                    <li :class="{
+                                  active: pageNumber == page,
+                                  disabled: pageNumber == '...',
+                                }" v-for="(pageNumber, index) in pages.slice(page - 1, page + 5)" :key="index"
+                      @click="page = pageNumber">
+                      <a class="page" href="#">{{ pageNumber }}</a>
+                    </li>
+                  </ul>
+                  <a class="page-item pagination-next" href="#" @click="page++" v-if="page < pages.length">
+                    Next
+                  </a>
+                </div>
+              </div>
           </div>
           <!-- end card-body -->
         </div>

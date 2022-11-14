@@ -2213,10 +2213,3 @@ export default {
   }
 };
 </script>
-<style scoped>
-.loader-setup{
-  width: 18px;
-  height: 18px;
-  margin-left: 9px;
-}
-</style>
