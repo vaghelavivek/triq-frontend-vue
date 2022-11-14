@@ -11,15 +11,15 @@ const requestHandler = request => {
 };
 const responseHandler = response => {
     if(response.status==401){
-    //    store.dispatch('Auth/logout')
+       store.dispatch('auth/logout')
     }
    return response;
 };
 
 const errorHandler = error => {
-    // if(error.response.status==401){
-    //    store.dispatch('Auth/logout')
-    // }
+    if(error.response && error.response.status==401){
+       store.dispatch('auth/logout')
+    }
     return Promise.reject(error);
 };
 

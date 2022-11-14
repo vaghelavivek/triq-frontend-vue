@@ -1101,8 +1101,12 @@ export default [
     meta: { title: "Add User", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/user/Add"),
   },
-
-  //services routes
+  {
+    path: "/admin/users/edit/:id",
+    name: "EditUser",
+    meta: { title: "Edit User", authRequired: true,isSuperAdmin:true},
+    component: () => import("../views/pages/user/Add"),
+  },
   {
     path: "/admin/services",
     name: "Services",
