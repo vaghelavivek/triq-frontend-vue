@@ -25,15 +25,20 @@ export default {
   computed: {
     ...mapGetters({
       getOrders: "order/getOrders",
+      userData: "auth/user",
     }),
   },
   mounted() {
     this.setOrders();
+    if (this.userData && this.userData.role_id != 3) {
+      this.fetchUsers()
+    }
   },
   methods: {
     ...mapActions({
       setOrders: "order/setOrders",
       deleteOrder: "order/deleteOrder",
+      fetchUsers:'users/fetchUsers'
     }),
     getDate(date) {
       return moment(date).format("MM/DD/YY");

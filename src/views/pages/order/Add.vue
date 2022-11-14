@@ -30,6 +30,7 @@ export default {
       },
       isSubmited: false,
       servicesData: [],
+      usersData: [],
     };
   },
   validations: {
@@ -50,6 +51,7 @@ export default {
   computed: {
     ...mapGetters({
       userData: "auth/user",
+      getUsers: "users/getUsers",
     }),
   },
   mounted() {
@@ -59,12 +61,14 @@ export default {
     if (this.userData && this.userData.role_id == 3) {
       this.getServicesByUserData();
     }
+    this.setupUserData();
   },
   methods: {
     ...mapActions({
       addOrder: "order/addOrder",
       getOrderById: "order/getOrderById",
       getServicesByUser: "service/getServicesByUser",
+      getServiceById: "service/getServiceById",
     }),
     clearOrder() {
       this.order = {
@@ -87,11 +91,17 @@ export default {
       }
       var formdata = new FormData();
       formdata.append("id", this.order.id);
-      formdata.append("title", this.order.title);
-      formdata.append("description", this.order.description);
-      formdata.append("country", this.order.country);
-      formdata.append("price", this.order.price);
-      formdata.append("tenure", this.order.tenure);
+      formdata.append("user_id", this.order.user_id);
+      formdata.append("service_id", this.order.service_id);
+      formdata.append("amount", this.order.amount);
+      formdata.append("tax", this.order.tax);
+      formdata.append("final_amount", this.order.final_amount);
+      formdata.append("payment_status", this.order.payment_status);
+      formdata.append("service_status", this.order.service_status);
+      formdata.append(
+        "order_documents",
+        JSON.stringify(this.order.order_documents)
+      );
       this.addOrder(formdata)
         .then((res) => {
           if (res.data.status) {
@@ -171,12 +181,58 @@ export default {
             });
             console.log("serData", serData);
             this.servicesData = serData;
+          } else {
+            this.servicesData = [];
           }
         })
         .catch((e) => {
           console.log(e);
         });
     },
+    setupUserData() {
+      var userData = [];
+      this.getUsers.map((user) => {
+        var payload = {
+          value: user.id,
+          label: user.name,
+        };
+        userData.push(payload);
+      });
+      this.usersData = userData;
+    },
+    getServiceDocumentData() {
+      this.getServiceById(this.order.service_id)
+        .then((res) => {
+          if (res.data.status) {
+            let service = res.data.data.service;
+            let serviceDocument = service.service_document;
+            var nameDocument = [];
+            serviceDocument.map((doc) => {
+              var docData = {
+                service_documents_id: doc.id,
+                service_documents_name: doc.name,
+                uploaded_file: null,
+              };
+              nameDocument.push(docData);
+            });
+            this.order.order_documents = nameDocument;
+          }
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    },
+    onOrderDocChange(e,service_documents_id){
+      const file = e.target.files[0];
+      if (file) {
+        var fileUrl = URL.createObjectURL(file);
+        this.order.order_documents.map((order_doc) =>{
+          if(order_doc.service_documents_id == service_documents_id){
+            order_doc.uploaded_file = fileUrl
+          }
+        })
+      }
+    }
   },
 };
 </script>
@@ -191,15 +247,17 @@ export default {
           <div class="card-header align-items-center d-flex">
             <h4 class="card-title mb-0 flex-grow-1">Add Order</h4>
           </div>
+          {{ order.order_documents }}
           <!-- end card header -->
           <div class="card-body">
             <div class="row">
               <div class="col-md-6">
                 <h3 class="mb-4">Order Detail</h3>
-                <pre>{{ userData }}</pre>
                 <div class="row mb-4">
                   <div class="col-lg-3">
-                    <label for="title" class="form-label">User Name</label>
+                    <label for="title" class="form-label"
+                      >User Name {{ order.user_id }}</label
+                    >
                   </div>
                   <div
                     class="col-lg-9"
@@ -210,11 +268,8 @@ export default {
                       :close-on-select="true"
                       :searchable="true"
                       :create-option="true"
-                      @change="getServicesByUserData"
-                      :options="[
-                        { value: 'india', label: 'India' },
-                        { value: 'arabic', label: 'Arabic' },
-                      ]"
+                      :options="usersData"
+                      @select="getServicesByUserData"
                     />
                   </div>
                   <div class="col-lg-9" v-else>
@@ -233,6 +288,7 @@ export default {
                       :searchable="true"
                       :create-option="true"
                       :options="servicesData"
+                      @select="getServiceDocumentData"
                     />
                   </div>
                 </div>
@@ -354,18 +410,16 @@ export default {
               </div>
               <div class="col-md-6">
                 <h3 class="mb-4">Order Document</h3>
-                <div class="row mb-4">
+                <div class="row mb-4" v-for="(order_doc,index) in order.order_documents" :key="index">
                   <div class="col-lg-3">
-                    <label for="title" class="form-label">Aadhar</label>
+                    <label for="title" class="form-label">{{order_doc.service_documents_name}}</label>
                   </div>
                   <div class="col-lg-7">
-                    <input type="file" class="form-control" id="amount" />
+                    <input type="file" class="form-control" id="amount" @change="onOrderDocChange($event,order_doc.service_documents_id)"/>
                   </div>
                   <div class="col-lg-2">
-                    <a
-                      href="javascript:void(0);"
-                      class="link-primary fs-15"
-                      ><i class="ri-download"></i
+                    <a href="javascript:void(0);" class="download-icon"
+                      ><i class="ri-download-2-line"></i
                     ></a>
                   </div>
                 </div>
@@ -390,3 +444,9 @@ export default {
     <!--end row-->
   </Layout>
 </template>
+<style scoped>
+.download-icon {
+  color: #000000;
+  font-size: 30px;
+}
+</style>
