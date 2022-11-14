@@ -213,7 +213,7 @@ export default {
                       @change="getServicesByUserData"
                       :options="[
                         { value: 'india', label: 'India' },
-                        { value: 'arabic', label: 'Arabic' },
+                        { value: 'uae', label: 'UAE' },
                       ]"
                     />
                   </div>

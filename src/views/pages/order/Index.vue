@@ -78,7 +78,7 @@ export default {
                 :create-option="true"
                 :options="[
                   { value: 'india', label: 'India' },
-                  { value: 'arabic', label: 'Arabic' },
+                  { value: 'uae', label: 'UAE' },
                 ]"
               />
             </div>

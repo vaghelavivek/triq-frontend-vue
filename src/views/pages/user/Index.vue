@@ -95,7 +95,8 @@ export default {
     }
   },
   async mounted() {
-    this.getAllUsers()
+    await this.getAllUsers()
+    await this.setPages()
   },
 };
 </script>
@@ -115,7 +116,7 @@ export default {
                 :create-option="true"
                 :options="[
                   { value: 'india', label: 'India' },
-                  { value: 'arabic', label: 'Arabic' },
+                  { value: 'uae', label: 'UAE' },
                 ]"
               />
             </div>

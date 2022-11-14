@@ -552,7 +552,7 @@ export default {
                        :searchable="true"
                       :options="[
                         { value: 'india', label: 'India' },
-                        { value: 'arabic', label: 'Arabic' },
+                        { value: 'uae', label: 'UAE' },
                       ]"
                     />
                     <div

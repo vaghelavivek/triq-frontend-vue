@@ -16,7 +16,7 @@ export default {
   },
   data() {
     return {
-      title: "Add Service",
+      title: "Add",
       service: {
         id: null,
         title: null,
@@ -27,10 +27,13 @@ export default {
         tenure: "monthly",
         document_names: [],
       },
+      serviceImageData:null,
       isSubmited: false,
       imageData: null,
       imageUrl: null,
       assetUrl: "http://127.0.0.1:8000",
+      loader:false,
+      disabled:false,
     };
   },
   validations: {
@@ -63,6 +66,7 @@ export default {
     if (this.$route.name == "EditService" && this.$route.params.id) {
       console.log("route", this.$route.name);
       this.getServiceData(this.$route.params.id);
+      this.title='Update'
     }
   },
   methods: {
@@ -88,6 +92,8 @@ export default {
       if (this.v$.$invalid) {
         return;
       }
+      this.loader=true
+      this.disabled=true
       var formdata = new FormData();
       formdata.append("id", this.service.id);
       formdata.append("title", this.service.title);
@@ -104,10 +110,12 @@ export default {
       }
       this.addService(formdata)
         .then((res) => {
+          this.loader=false
+          this.disabled=false
           if (res.data.status) {
             this.isSubmited = false;
-            this.clearService();
             var msg = this.service.id ? 'Service Updated Successfully' : 'Service Added Successfully'
+            this.clearService();
             this.$toast.open({
               message: msg,
               type: "success",
@@ -116,8 +124,10 @@ export default {
           }
         })
         .catch((error) => {
+          this.loader=false
+          this.disabled=false
           this.$toast.open({
-            message: error,
+            message: 'Server Error',
             type: "error",
           });
         });
@@ -201,7 +211,7 @@ export default {
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1">Add Service</h4>
+            <h4 class="card-title mb-0 flex-grow-1">{{title}} Service</h4>
           </div>
           <!-- end card header -->
           <!-- <pre>{{ service }}</pre> -->
@@ -262,7 +272,7 @@ export default {
                       :create-option="true"
                       :options="[
                         { value: 'india', label: 'India' },
-                        { value: 'arabic', label: 'Arabic' },
+                        { value: 'uae', label: 'UAE' },
                       ]"
                     />
                   </div>
@@ -373,7 +383,7 @@ export default {
 
                 <div class="row mb-4">
                   <div class="col-6">
-                    <h2>Documents Required</h2>
+                    <h3>Documents Required</h3>
                   </div>
                   <div class="col-4">
                     <button
@@ -418,13 +428,16 @@ export default {
               </div>
             </div>
 
-            <div class="text-end">
+            <div class="text-end float-end">
               <button
                 type="submit"
-                class="btn btn-primary"
+                 class="btn btn-primary align-items-center d-flex justify-content-center"
                 @click="saveService"
               >
-                Add Service
+                {{title}} Service
+                <div class="spinner-border loader-setup" role="status" v-if="loader">
+                        <span class="sr-only">Loading...</span>
+                      </div>
               </button>
             </div>
           </div>
