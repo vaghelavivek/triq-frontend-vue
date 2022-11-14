@@ -18,11 +18,12 @@ export const mutations = {
 };
 
 export const actions = {
+  // eslint-disable-next-line no-unused-vars
   async addService({state }, data) {
     let resp = await axios.post("/api/service/add-service", data);
-    if (resp.data.status == true) {
-      state.services.unshift(resp.data.data.service);
-    }
+    // if (resp.data.status == true) {
+    //   state.services.unshift(resp.data.data.service);
+    // }
     return resp;
   },
   async updateService({ commit, state }, payload) {
@@ -51,6 +52,16 @@ export const actions = {
       });
       commit("SET_SERVICES", newState);
     }
+    return resp;
+  },
+  // eslint-disable-next-line no-empty-pattern
+  async getServiceById({},serviceId) {
+    let resp = await axios.get("/api/service/get-service-by-id/"+serviceId);
+    return resp;
+  },
+  // eslint-disable-next-line no-empty-pattern
+  async getServicesByUser({},userID) {
+    let resp = await axios.get("/api/service/get-services-by-userid/"+userID);
     return resp;
   },
 };

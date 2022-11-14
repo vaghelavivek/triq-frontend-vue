@@ -18,6 +18,7 @@ export default {
     return {
       title: "Add Service",
       service: {
+        id: null,
         title: null,
         description: null,
         country: "india",
@@ -29,7 +30,7 @@ export default {
       isSubmited: false,
       imageData: null,
       imageUrl: null,
-      assetUrl: "https://app.poplinks.io/",
+      assetUrl: "http://127.0.0.1:8000",
     };
   },
   validations: {
@@ -58,13 +59,20 @@ export default {
       }
     },
   },
-  mounted() {},
+  mounted() {
+    if (this.$route.name == "EditService" && this.$route.params.id) {
+      console.log("route", this.$route.name);
+      this.getServiceData(this.$route.params.id);
+    }
+  },
   methods: {
     ...mapActions({
       addService: "service/addService",
+      getServiceById: "service/getServiceById",
     }),
     clearService() {
       this.service = {
+        id: null,
         title: null,
         description: null,
         country: "india",
@@ -81,24 +89,37 @@ export default {
         return;
       }
       var formdata = new FormData();
+      formdata.append("id", this.service.id);
       formdata.append("title", this.service.title);
       formdata.append("description", this.service.description);
       formdata.append("country", this.service.country);
       formdata.append("price", this.service.price);
       formdata.append("tenure", this.service.tenure);
-      formdata.append("service_image", this.imageData);
-      formdata.append("document_names", JSON.stringify(this.service.document_names));
+      formdata.append(
+        "document_names",
+        JSON.stringify(this.service.document_names)
+      );
+      if (this.imageData) {
+        formdata.append("service_image", this.imageData);
+      }
       this.addService(formdata)
         .then((res) => {
           if (res.data.status) {
             this.isSubmited = false;
             this.clearService();
-            this.$toast.success("Service added Successfully");
-            this.$router.push({name:"Services"})
+            var msg = this.service.id ? 'Service Updated Successfully' : 'Service Added Successfully'
+            this.$toast.open({
+              message: msg,
+              type: "success",
+            });
+            this.$router.push({ name: "Services" });
           }
         })
         .catch((error) => {
-          console.log("error", error);
+          this.$toast.open({
+            message: error,
+            type: "error",
+          });
         });
     },
     onFileChange(e) {
@@ -131,9 +152,43 @@ export default {
       };
       this.service.document_names.push(doc);
     },
-    removeDocument(index){
-      this.service.document_names.splice(index,1);
-    }
+    removeDocument(index) {
+      this.service.document_names.splice(index, 1);
+    },
+    getServiceData(serviceId) {
+      this.getServiceById(serviceId)
+        .then((res) => {
+          console.log("resss", res.data);
+          if (res.data.status) {
+            let service = res.data.data.service;
+            let serviceDocument = service.service_document;
+            this.service = {
+              id: service.id,
+              title: service.title,
+              description: service.description,
+              country: service.country,
+              image: service.service_image,
+              price: service.price,
+              tenure: service.tenure,
+            };
+            var nameDocument = [];
+            serviceDocument.map((doc) => {
+              var docData = {
+                id: doc.id,
+                name: doc.name,
+              };
+              nameDocument.push(docData);
+            });
+            this.service.document_names = nameDocument;
+            console.log("nameDocument", nameDocument);
+          } else {
+            this.$router.push({ name: "AddService" });
+          }
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    },
   },
 };
 </script>
@@ -332,7 +387,7 @@ export default {
 
                   <div class="row mt-4">
                     <div
-                      class="col-6 d-flex"
+                      class="col-6 d-flex mb-4"
                       v-for="(names, index) in service.document_names"
                       :key="index"
                     >
@@ -347,7 +402,8 @@ export default {
                       <button
                         class="
                           btn btn-danger btn-md btn-icon
-                          waves-effect waves-light ms-2
+                          waves-effect waves-light
+                          ms-2
                         "
                         type="button"
                         @click="removeDocument(index)"

@@ -1097,11 +1097,12 @@ export default [
   },
   {
     path: "/admin/users/add",
-    name: "Add User",
+    name: "AddUser",
     meta: { title: "Add User", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/user/Add"),
   },
 
+  //services routes
   {
     path: "/admin/services",
     name: "Services",
@@ -1110,8 +1111,34 @@ export default [
   },
   {
     path: "/admin/services/add",
-    name: "Add Service",
+    name: "AddService",
     meta: { title: "Add Service", authRequired: true,isSuperAdmin:true},
     component: () => import("../views/pages/service/Add"),
+  },
+  {
+    path: "/admin/services/edit/:id",
+    name: "EditService",
+    meta: { title: "Edit Service", authRequired: true,isSuperAdmin:true},
+    component: () => import("../views/pages/service/Add"),
+  },
+
+  //Orders routes
+  {
+    path: "/admin/orders",
+    name: "Orders",
+    meta: { title: "Orders", authRequired: true,isSuperAdmin:false},
+    component: () => import("../views/pages/order/Index"),
+  },
+  {
+    path: "/admin/order/add",
+    name: "AddOrder",
+    meta: { title: "Add Order", authRequired: true,isSuperAdmin:false},
+    component: () => import("../views/pages/order/Add"),
+  },
+  {
+    path: "/admin/order/edit/:id",
+    name: "EditOrder",
+    meta: { title: "Edit Order", authRequired: true,isSuperAdmin:false},
+    component: () => import("../views/pages/order/Add"),
   },
 ];

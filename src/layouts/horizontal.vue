@@ -110,13 +110,19 @@
               <li class="nav-item">
                 <router-link to="/admin/users" class="nav-link" data-key="t-calendar">
                   <i class="bx bxs-user"></i>
-                  <span data-key="t-dashboards"> User</span>
+                  <span data-key="t-dashboards">Users</span>
                 </router-link>
               </li>
               <li class="nav-item">
                 <router-link to="/admin/services" class="nav-link" data-key="t-calendar">
                   <i class="bx bxs-user"></i>
-                  <span data-key="t-dashboards">Service</span>
+                  <span data-key="t-dashboards">Services</span>
+                </router-link>
+              </li>
+              <li class="nav-item">
+                <router-link to="/admin/orders" class="nav-link" data-key="t-calendar">
+                  <i class="bx bxs-user"></i>
+                  <span data-key="t-dashboards">Orders</span>
                 </router-link>
               </li>
 

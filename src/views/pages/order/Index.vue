@@ -13,7 +13,7 @@ import Swal from "sweetalert2";
 export default {
   data() {
     return {
-      title: "Service",
+      title: "Orders",
       selectedCountry: "india",
     };
   },
@@ -24,21 +24,21 @@ export default {
   },
   computed: {
     ...mapGetters({
-      getServices: "service/getServices",
+      getOrders: "order/getOrders",
     }),
   },
   mounted() {
-    this.setServices();
+    this.setOrders();
   },
   methods: {
     ...mapActions({
-      setServices: "service/setServices",
-      deleteService: "service/deleteService",
+      setOrders: "order/setOrders",
+      deleteOrder: "order/deleteOrder",
     }),
     getDate(date) {
       return moment(date).format("MM/DD/YY");
     },
-    deleteServiceData(id) {
+    deleteOrderData(id) {
       Swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -49,7 +49,7 @@ export default {
         confirmButtonText: "Yes, delete it!",
       }).then((result) => {
         if (result.value) {
-          this.deleteService(id)
+          this.deleteOrder(id)
             .then((response) => {
               console.log(response);
             })
@@ -94,13 +94,13 @@ export default {
 
         <div class="card mt-4">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1">Services</h4>
+            <h4 class="card-title mb-0 flex-grow-1">Orders</h4>
             <div class="flex-shrink-0">
               <router-link
-                to="/admin/services/add"
+                to="/admin/order/add"
                 class="btn btn-primary waves-effect waves-light"
               >
-                Add Service
+                Add Order
               </router-link>
             </div>
           </div>
@@ -112,31 +112,29 @@ export default {
                 <thead>
                   <tr>
                     <th scope="col">Date</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Price</th>
-                    <th scope="col">Country</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Order</th>
+                    <th scope="col">Order Status</th>
+                    <th scope="col">Payment Status</th>
+                    <th scope="col">Assigned User</th>
                     <th scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(service, index) in getServices" :key="index">
-                    <td>{{ getDate(service.created_at) }}</td>
-                    <td>{{ service.title }}</td>
-                    <td>{{ service.price }}</td>
-                    <td class="text-capitalize">{{ service.country }}</td>
-                    <!-- <td>
-                      <a href="javascript:void(0);" class="link-success"
-                        >View Details
-                        <i class="ri-arrow-right-line align-middle"></i
-                      ></a>
-                    </td> -->
+                  <tr v-for="(order, index) in getOrders" :key="index">
+                    <td>{{ getDate(order.created_at) }}</td>
+                    <td>{{ order.user_id }}</td>
+                    <td>{{ order.service_id }}</td>
+                    <td>{{ order.service_status }}</td>
+                    <td>{{ order.payment_status }}</td>
+                    <td>{{ order.assigned_user }}</td>
                     <td>
                       <div class="hstack gap-3 flex-wrap">
-                        <router-link class="link-success fs-15" :to="{name: 'EditService',params: { id: service.id },}"
+                        <router-link class="link-success fs-15" :to="{name: 'EditOrder',params: { id: order.id },}"
                           ><i class="ri-edit-2-line"></i></router-link>
                         <a
                           href="javascript:void(0);"
-                          @click="deleteServiceData(service.id)"
+                          @click="deleteOrderData(order.id)"
                           class="link-danger fs-15"
                           ><i class="ri-delete-bin-line"></i
                         ></a>
