@@ -48,5 +48,5 @@ export const actions = {
       commit("SET_USERDATA", newState);
       return resp;
     }
-  }
+  },
 };
