@@ -30,7 +30,6 @@ export default {
       },
       isSubmited: false,
       servicesData: [],
-      usersData: [],
     };
   },
   validations: {
@@ -51,8 +50,19 @@ export default {
   computed: {
     ...mapGetters({
       userData: "auth/user",
-      getUsers: "users/getUsers",
+      getUserLists: "users/getUserLists",
     }),
+    usersData(){
+      var data = []
+      this.getUserLists.map((user) => {
+        var payload = {
+          value: user.id,
+          label: user.name,
+        };
+        data.push(payload);
+      });
+      return data
+    }
   },
   mounted() {
     if (this.$route.name == "EditService" && this.$route.params.id) {
@@ -61,7 +71,8 @@ export default {
     if (this.userData && this.userData.role_id == 3) {
       this.getServicesByUserData();
     }
-    this.setupUserData();
+    this.fetchUserLists();
+    // this.setupUserData();
   },
   methods: {
     ...mapActions({
@@ -69,6 +80,7 @@ export default {
       getOrderById: "order/getOrderById",
       getServicesByUser: "service/getServicesByUser",
       getServiceById: "service/getServiceById",
+      fetchUserLists: "users/fetchUserLists",
     }),
     clearOrder() {
       this.order = {
@@ -191,7 +203,7 @@ export default {
     },
     setupUserData() {
       var userData = [];
-      this.getUsers.map((user) => {
+      this.getUserLists.map((user) => {
         var payload = {
           value: user.id,
           label: user.name,

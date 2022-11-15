@@ -9,6 +9,8 @@ import "prismjs/themes/prism.css";
 import { required, helpers } from "@vuelidate/validators";
 import useVuelidate from "@vuelidate/core";
 import { mapActions } from "vuex";
+import CKEditor from "@ckeditor/ckeditor5-vue";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
 export default {
   setup() {
@@ -34,6 +36,28 @@ export default {
       assetUrl: "http://127.0.0.1:8000",
       loader:false,
       disabled:false,
+      editor: ClassicEditor,
+      editorData:"",
+      content: "<h1>Some initial content</h1>",
+      plugins: [
+        "advlist autolink link image lists charmap preview hr anchor pagebreak spellchecker",
+        "searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime nonbreaking",
+        "save table contextmenu directionality emoticons template paste textcolor",
+      ],
+      toolbar:
+        "undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent fullpage | forecolor backcolor emoticons",
+      options: {
+        height: 300,
+        style_formats: [
+          { title: "Bold text", inline: "b" },
+          { title: "Red text", inline: "span", styles: { color: "#ff0000" } },
+          { title: "Red header", block: "h1", styles: { color: "#ff0000" } },
+          { title: "Example 1", inline: "span", classes: "example1" },
+          { title: "Example 2", inline: "span", classes: "example2" },
+          { title: "Table styles" },
+          { title: "Table row 1", selector: "tr", classes: "tablerow1" },
+        ],
+      },
     };
   },
   validations: {
@@ -50,6 +74,7 @@ export default {
     Layout,
     PageHeader,
     Multiselect,
+    ckeditor: CKEditor.component
   },
   computed: {
     dbserviceImageSrc() {
@@ -113,6 +138,7 @@ export default {
           this.loader=false
           this.disabled=false
           if (res.data.status) {
+            console.log('service update')
             this.isSubmited = false;
             var msg = this.service.id ? 'Service Updated Successfully' : 'Service Added Successfully'
             this.clearService();
@@ -251,13 +277,14 @@ export default {
                     >
                   </div>
                   <div class="col-lg-9">
-                    <input
+                    <!-- <input
                       type="text"
                       class="form-control"
                       id="description"
                       placeholder="Enter Description"
                       v-model="service.description"
-                    />
+                    /> -->
+                    <ckeditor v-model="service.description" :editor="editor"></ckeditor>
                   </div>
                 </div>
 
@@ -338,10 +365,22 @@ export default {
 
                 <div class="row mb-4">
                   <div class="col-lg-3">
-                    <label for="phone" class="form-label">Tenure</label>
+                    <label for="phone" class="form-label">Periodicity</label>
                   </div>
                   <div class="col-lg-9">
                     <div class="mt-4 mt-lg-0">
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          id="one_time"
+                          value="one_time"
+                          v-model="service.tenure"
+                        />
+                        <label class="form-check-label" for="one_time"
+                          >One Time</label
+                        >
+                      </div>
                       <div class="form-check form-check-inline">
                         <input
                           class="form-check-input"

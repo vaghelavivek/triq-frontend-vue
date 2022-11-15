@@ -30,15 +30,11 @@ export default {
   },
   mounted() {
     this.setOrders();
-    if (this.userData && this.userData.role_id != 3) {
-      this.fetchUsers()
-    }
   },
   methods: {
     ...mapActions({
       setOrders: "order/setOrders",
       deleteOrder: "order/deleteOrder",
-      fetchUsers:'users/fetchUsers'
     }),
     getDate(date) {
       return moment(date).format("MM/DD/YY");
@@ -110,7 +106,6 @@ export default {
             </div>
           </div>
           <!-- end card header -->
-
           <div class="card-body">
             <div class="table-responsive">
               <table class="table align-middle table-nowrap mb-0">

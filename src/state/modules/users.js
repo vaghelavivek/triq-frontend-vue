@@ -1,17 +1,24 @@
 import axios from '@/plugins/apiServices.js' 
 export const state = {
   users: [],
+  userlists: []
 };
 
 export const getters = {
   getUsers(state) {
     return state.users;
   },
+  getUserLists(state) {
+    return state.userlists;
+  },
 };
 
 export const mutations = {
   SET_USERDATA(state, value) {
     state.users = value;
+  },
+  SET_USERLISTS(state, value) {
+    state.userlists = value;
   },
 };
 
@@ -48,5 +55,12 @@ export const actions = {
       commit("SET_USERDATA", newState);
       return resp;
     }
-  }
+  },
+  async fetchUserLists({ commit }) {
+  let resp = await axios.get("/api/user/get-user-names-list");
+    if (resp.data.status == true) {
+      commit("SET_USERLISTS", resp.data.data.users);
+    }
+    return resp;
+  },
 };
