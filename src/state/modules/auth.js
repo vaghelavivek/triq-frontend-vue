@@ -64,4 +64,14 @@ export const actions = {
     }
     return resp;
   },
+   // eslint-disable-next-line no-empty-pattern
+   async checkEmailExist({}, data) {
+    let resp = await axios.post('/api/get-user-by-email', data)
+    return resp;
+  },
+   // eslint-disable-next-line no-empty-pattern
+   async registerUser({}, data) {
+    let resp = await axios.post('/api/register-user', data)
+    return resp;
+  },
 }
