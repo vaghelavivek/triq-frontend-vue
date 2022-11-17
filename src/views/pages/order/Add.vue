@@ -282,9 +282,9 @@ export default {
         this.order.final_amount = servicePrices.yearly;
       else this.order.final_amount = 0;
     },
-  },
-  getDate(date) {
-    return moment(date).format("MM/DD/YY");
+    getDate(date) {
+      return moment(date).format("MM/DD/YY");
+    },
   },
 };
 </script>
@@ -520,31 +520,58 @@ export default {
                   </div>
                 </div>
 
-                <h3 class="mb-4">Comment History</h3>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table align-middle table-nowrap mb-0">
-                      <thead>
-                        <tr>
-                          <th scope="col">Date</th>
-                          <th scope="col">Comment</th>
-                          <th scope="col">Attachment</th>
-                          <th scope="col">User</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr
-                          v-for="(comment, index) in commentsData"
-                          :key="index"
-                        >
-                          <td>{{ getDate(order.created_at) }}</td>
-                          <td>Hello World</td>
-                          <td>Download</td>
-                          <td>Vivek</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                <div class="history" v-if="commentsData.length > 0">
+                  <h3 class="mb-2">Comment History</h3>
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table align-middle table-nowrap mb-0">
+                        <thead>
+                          <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Comment</th>
+                            <th scope="col">Attachment</th>
+                            <th scope="col">User</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="(comment, index) in commentsData"
+                            :key="index"
+                          >
+                            <td>{{ getDate(comment.created_at) }}</td>
+                            <td>{{ comment.notes }}</td>
+                            <td>Download</td>
+                            <td>
+                              {{
+                                comment.user && comment.user.name
+                                  ? comment.user.name
+                                  : "-"
+                              }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-8">
+                    <h3 class="mb-2">Add Comment</h3>
+                  </div>
+                  <div class="col-4">
+                    <input
+                      type="file"
+                      class="form-control"
+                      id="attchment"
+                      @change="
+                        onOrderDocChange($event, order_doc.service_documents_id)
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="add-comment">
+                  <textarea class="form-control" v-model="comment.attchment"></textarea>
                 </div>
               </div>
             </div>
