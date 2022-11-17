@@ -115,6 +115,7 @@ export default {
         },
         document_names: [],
       };
+      this.editorData=""
     },
     saveService() {
       this.isSubmited = true;
@@ -127,7 +128,7 @@ export default {
       var formdata = new FormData();
       formdata.append("id", this.service.id);
       formdata.append("title", this.service.title);
-      formdata.append("description", this.service.description);
+      formdata.append("description", this.editorData);
       formdata.append("country", this.service.country);
       formdata.append("prices",  JSON.stringify(this.service.prices));
       formdata.append(
@@ -201,6 +202,7 @@ export default {
           if (res.data.status) {
             let service = res.data.data.service;
             let serviceDocument = service.service_document;
+            this.editorData=service.description ? service.description : ""
             this.service = {
               id: service.id,
               title: service.title,
@@ -284,11 +286,10 @@ export default {
                       placeholder="Enter Description"
                       v-model="service.description"
                     /> -->
-                    <!-- <ckeditor
-                      v-model="service.description"
+                    <ckeditor
+                      v-model="editorData"
                       :editor="editor"
-                    ></ckeditor> -->
-                    <textarea class="form-control" v-model="service.description"></textarea>
+                    ></ckeditor>
                   </div>
                 </div>
 
