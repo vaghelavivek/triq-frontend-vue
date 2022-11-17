@@ -9,6 +9,7 @@ import "prismjs/themes/prism.css";
 import { required, helpers } from "@vuelidate/validators";
 import useVuelidate from "@vuelidate/core";
 import { mapActions, mapGetters } from "vuex";
+import moment from "moment";
 
 export default {
   setup() {
@@ -21,8 +22,7 @@ export default {
         id: null,
         user_id: null,
         service_id: null,
-        amount: null,
-        tax: null,
+        tenure: "onetime",
         final_amount: null,
         payment_status: "received",
         service_status: "processing",
@@ -30,6 +30,15 @@ export default {
       },
       isSubmited: false,
       servicesData: [],
+      commentsData: [],
+      comment: {
+        id: null,
+        notes: null,
+        is_send_email: null,
+        is_personal_note: null,
+        attachment: null,
+      },
+      selectedService: null,
     };
   },
   validations: {
@@ -52,8 +61,8 @@ export default {
       userData: "auth/user",
       getUserLists: "users/getUserLists",
     }),
-    usersData(){
-      var data = []
+    usersData() {
+      var data = [];
       this.getUserLists.map((user) => {
         var payload = {
           value: user.id,
@@ -61,11 +70,11 @@ export default {
         };
         data.push(payload);
       });
-      return data
-    }
+      return data;
+    },
   },
   mounted() {
-    if (this.$route.name == "EditService" && this.$route.params.id) {
+    if (this.$route.name == "EditOrder" && this.$route.params.id) {
       this.getOrderData(this.$route.params.id);
     }
     if (this.userData && this.userData.role_id == 3) {
@@ -87,8 +96,7 @@ export default {
         id: null,
         user_id: null,
         service_id: null,
-        amount: null,
-        tax: null,
+        tenure: null,
         final_amount: null,
         payment_status: "received",
         service_status: "processing",
@@ -101,19 +109,21 @@ export default {
       if (this.v$.$invalid) {
         return;
       }
-      console.log('order_documents',this.order.order_documents)
+      console.log("order_documents", this.order.order_documents);
       var formdata = new FormData();
       formdata.append("id", this.order.id);
       formdata.append("user_id", this.order.user_id);
       formdata.append("service_id", this.order.service_id);
-      formdata.append("amount", this.order.amount);
-      formdata.append("tax", this.order.tax);
+      formdata.append("tenure", this.order.tenure);
       formdata.append("final_amount", this.order.final_amount);
       formdata.append("payment_status", this.order.payment_status);
       formdata.append("service_status", this.order.service_status);
       this.order.order_documents.map((doc) => {
-        formdata.append("order_documents_"+doc.service_documents_id,doc.uploaded_file);
-        });
+        formdata.append(
+          "order_documents_" + doc.service_documents_id,
+          doc.uploaded_file
+        );
+      });
       this.addOrder(formdata)
         .then((res) => {
           if (res.data.status) {
@@ -141,31 +151,40 @@ export default {
       this.getOrderById(orderId)
         .then((res) => {
           console.log(res);
-          // if (res.data.status) {
-          //   let service = res.data.data.service;
-          //   let serviceDocument = service.service_document;
-          //   this.service = {
-          //     id: service.id,
-          //     title: service.title,
-          //     description: service.description,
-          //     country: service.country,
-          //     image: service.service_image,
-          //     price: service.price,
-          //     tenure: service.tenure,
-          //   };
-          //   var nameDocument = []
-          //   serviceDocument.map((doc) => {
-          //     var docData = {
-          //       id: doc.id,
-          //       name: doc.name,
-          //     };
-          //     nameDocument.push(docData);
-          //   });
-          //   this.service.document_names = nameDocument
-          //   console.log('nameDocument',nameDocument)
-          // } else {
-          //   this.$router.push({ name: "AddService" });
-          // }
+          if (res.data.status) {
+            let order = res.data.data.order;
+            let orderDocuments = order.order_documents;
+            let orderUpdates = order.order_updates;
+            if (order) {
+              this.order = {
+                id: order.id,
+                user_id: order.user_id,
+                service_id: order.service_id,
+                tenure: order.tenure,
+                final_amount: order.final_amount,
+                payment_status: order.payment_status,
+                service_status: order.service_status,
+                order_documents: [],
+              };
+              this.commentsData = orderUpdates;
+            }
+
+            this.getServicesByUserData();
+            this.getServiceDocumentData();
+
+            // var nameDocument = [];
+            // serviceDocument.map((doc) => {
+            //   var docData = {
+            //     id: doc.id,
+            //     name: doc.name,
+            //   };
+            //   nameDocument.push(docData);
+            // });
+            // this.service.document_names = nameDocument;
+            // console.log("nameDocument", nameDocument);
+          } else {
+            this.$router.push({ name: "AddOrder" });
+          }
         })
         .catch((e) => {
           console.log(e);
@@ -217,9 +236,11 @@ export default {
         .then((res) => {
           if (res.data.status) {
             let service = res.data.data.service;
+            this.selectedService = service;
             let serviceDocument = service.service_document;
             var nameDocument = [];
             serviceDocument.map((doc) => {
+              console.log("doc data", doc);
               var docData = {
                 id: null,
                 service_documents_id: doc.id,
@@ -229,6 +250,7 @@ export default {
               nameDocument.push(docData);
             });
             this.order.order_documents = nameDocument;
+            this.getServicePrice();
           }
         })
         .catch((e) => {
@@ -245,8 +267,24 @@ export default {
           }
         });
       }
-      console.log('this.order.order_documents',this.order.order_documents)
+      console.log("this.order.order_documents", this.order.order_documents);
     },
+    getServicePrice() {
+      console.log("get price");
+      var servicePrices = JSON.parse(this.selectedService.prices);
+      if (this.order.tenure == "onetime")
+        this.order.final_amount = servicePrices.onetime;
+      else if (this.order.tenure == "monthly")
+        this.order.final_amount = servicePrices.monthly;
+      else if (this.order.tenure == "quaterly")
+        this.order.final_amount = servicePrices.quaterly;
+      else if (this.order.tenure == "yearly")
+        this.order.final_amount = servicePrices.yearly;
+      else this.order.final_amount = 0;
+    },
+  },
+  getDate(date) {
+    return moment(date).format("MM/DD/YY");
   },
 };
 </script>
@@ -254,13 +292,15 @@ export default {
 <template>
   <Layout>
     <PageHeader />
-    <!-- {{ addService }} -->
+
     <div class="row">
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
             <h4 class="card-title mb-0 flex-grow-1">Add Order</h4>
           </div>
+          <pre>{{ commentsData }}</pre>
+          <!-- <pre>{{ selectedService }}</pre> -->
           <!-- end card header -->
           <div class="card-body">
             <div class="row">
@@ -268,9 +308,7 @@ export default {
                 <h3 class="mb-4">Order Detail</h3>
                 <div class="row mb-4">
                   <div class="col-lg-3">
-                    <label for="title" class="form-label"
-                      >User Name</label
-                    >
+                    <label for="title" class="form-label">User Name</label>
                   </div>
                   <div
                     class="col-lg-9"
@@ -308,31 +346,63 @@ export default {
 
                 <div class="row mb-4">
                   <div class="col-lg-3">
-                    <label for="amount" class="form-label">Amount</label>
+                    <label for="phone" class="form-label">Periodicity</label>
                   </div>
                   <div class="col-lg-9">
-                    <input
-                      type="number"
-                      class="form-control"
-                      id="amount"
-                      placeholder="Enter Amount"
-                      v-model="order.amount"
-                    />
-                  </div>
-                </div>
-
-                <div class="row mb-4">
-                  <div class="col-lg-3">
-                    <label for="tax" class="form-label">Tax</label>
-                  </div>
-                  <div class="col-lg-9">
-                    <input
-                      type="number"
-                      class="form-control"
-                      id="tax"
-                      placeholder="Enter Tax"
-                      v-model="order.tax"
-                    />
+                    <div class="mt-4 mt-lg-0">
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          id="onetime"
+                          value="onetime"
+                          v-model="order.tenure"
+                          @change="getServicePrice"
+                        />
+                        <label class="form-check-label" for="onetime"
+                          >One Time</label
+                        >
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          id="monthly"
+                          value="monthly"
+                          v-model="order.tenure"
+                          @change="getServicePrice"
+                        />
+                        <label class="form-check-label" for="monthly"
+                          >Monthly</label
+                        >
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          id="quaterly"
+                          value="quaterly"
+                          v-model="order.tenure"
+                          @change="getServicePrice"
+                        />
+                        <label class="form-check-label" for="quaterly"
+                          >Quaterly</label
+                        >
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          id="yearly"
+                          value="yearly"
+                          v-model="order.tenure"
+                          @change="getServicePrice"
+                        />
+                        <label class="form-check-label" for="yearly"
+                          >Yearly</label
+                        >
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -413,7 +483,7 @@ export default {
                       :create-option="true"
                       :options="[
                         { value: 'in_progress', label: 'In Progress' },
-                        { value: 'complate', label: 'Complete' },
+                        { value: 'complete', label: 'Complete' },
                         { value: 'on_hold', label: 'On Hold' },
                         { value: 'processing', label: 'Processing' },
                       ]"
@@ -447,6 +517,33 @@ export default {
                     <a href="javascript:void(0);" class="download-icon"
                       ><i class="ri-download-2-line"></i
                     ></a>
+                  </div>
+                </div>
+
+                <h3 class="mb-4">Comment History</h3>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table align-middle table-nowrap mb-0">
+                      <thead>
+                        <tr>
+                          <th scope="col">Date</th>
+                          <th scope="col">Comment</th>
+                          <th scope="col">Attachment</th>
+                          <th scope="col">User</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="(comment, index) in commentsData"
+                          :key="index"
+                        >
+                          <td>{{ getDate(order.created_at) }}</td>
+                          <td>Hello World</td>
+                          <td>Download</td>
+                          <td>Vivek</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>

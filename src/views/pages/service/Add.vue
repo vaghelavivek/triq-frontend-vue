@@ -25,19 +25,23 @@ export default {
         description: null,
         country: "india",
         image: null,
-        price: null,
-        tenure: "monthly",
+        prices: {
+          onetime : null,
+          monthly : null,
+          quaterly : null,
+          yearly : null,
+        },
         document_names: [],
       },
-      serviceImageData:null,
+      serviceImageData: null,
       isSubmited: false,
       imageData: null,
       imageUrl: null,
       assetUrl: "http://127.0.0.1:8000",
-      loader:false,
-      disabled:false,
+      loader: false,
+      disabled: false,
       editor: ClassicEditor,
-      editorData:"",
+      editorData: "",
       content: "<h1>Some initial content</h1>",
       plugins: [
         "advlist autolink link image lists charmap preview hr anchor pagebreak spellchecker",
@@ -64,17 +68,14 @@ export default {
     service: {
       title: {
         required: helpers.withMessage("Title is required", required),
-      },
-      price: {
-        required: helpers.withMessage("Price is required", required),
-      },
+      }
     },
   },
   components: {
     Layout,
     PageHeader,
     Multiselect,
-    ckeditor: CKEditor.component
+    ckeditor: CKEditor.component,
   },
   computed: {
     dbserviceImageSrc() {
@@ -91,7 +92,7 @@ export default {
     if (this.$route.name == "EditService" && this.$route.params.id) {
       console.log("route", this.$route.name);
       this.getServiceData(this.$route.params.id);
-      this.title='Update'
+      this.title = "Update";
     }
   },
   methods: {
@@ -106,8 +107,12 @@ export default {
         description: null,
         country: "india",
         image: null,
-        price: null,
-        tenure: "monthly",
+        prices: {
+          onetime : null,
+          monthly : null,
+          quaterly : null,
+          yearly : null,
+        },
         document_names: [],
       };
     },
@@ -117,15 +122,14 @@ export default {
       if (this.v$.$invalid) {
         return;
       }
-      this.loader=true
-      this.disabled=true
+      this.loader = true;
+      this.disabled = true;
       var formdata = new FormData();
       formdata.append("id", this.service.id);
       formdata.append("title", this.service.title);
       formdata.append("description", this.service.description);
       formdata.append("country", this.service.country);
-      formdata.append("price", this.service.price);
-      formdata.append("tenure", this.service.tenure);
+      formdata.append("prices",  JSON.stringify(this.service.prices));
       formdata.append(
         "document_names",
         JSON.stringify(this.service.document_names)
@@ -135,12 +139,14 @@ export default {
       }
       this.addService(formdata)
         .then((res) => {
-          this.loader=false
-          this.disabled=false
+          this.loader = false;
+          this.disabled = false;
           if (res.data.status) {
-            console.log('service update')
+            console.log("service update");
             this.isSubmited = false;
-            var msg = this.service.id ? 'Service Updated Successfully' : 'Service Added Successfully'
+            var msg = this.service.id
+              ? "Service Updated Successfully"
+              : "Service Added Successfully";
             this.clearService();
             this.$toast.open({
               message: msg,
@@ -150,11 +156,11 @@ export default {
           }
         })
         .catch((error) => {
-          console.log(error)
-          this.loader=false
-          this.disabled=false
+          console.log(error);
+          this.loader = false;
+          this.disabled = false;
           this.$toast.open({
-            message: 'Server Error',
+            message: "Server Error",
             type: "error",
           });
         });
@@ -172,10 +178,6 @@ export default {
           this.imageData = file;
           this.imageUrl = URL.createObjectURL(file);
           this.service.image = this.imageUrl;
-          // var formdata = new FormData();
-          // formdata.append('setting_id', this.snippetSetting.id)
-          // formdata.append('profile_image', this.imageData)
-          // this.updateSnippetserviceImage(formdata)
         } else {
           this.$refs.serviceImage.value = "";
           this.$swal.fire("Error!", "Please enter valid image file.", "error");
@@ -205,8 +207,7 @@ export default {
               description: service.description,
               country: service.country,
               image: service.service_image,
-              price: service.price,
-              tenure: service.tenure,
+              prices: JSON.parse(service.prices),
             };
             var nameDocument = [];
             serviceDocument.map((doc) => {
@@ -233,12 +234,11 @@ export default {
 <template>
   <Layout>
     <PageHeader />
-    <!-- {{ addService }} -->
     <div class="row">
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1">{{title}} Service</h4>
+            <h4 class="card-title mb-0 flex-grow-1">{{ title }} Service</h4>
           </div>
           <!-- end card header -->
           <!-- <pre>{{ service }}</pre> -->
@@ -284,7 +284,11 @@ export default {
                       placeholder="Enter Description"
                       v-model="service.description"
                     /> -->
-                    <ckeditor v-model="service.description" :editor="editor"></ckeditor>
+                    <!-- <ckeditor
+                      v-model="service.description"
+                      :editor="editor"
+                    ></ckeditor> -->
+                    <textarea class="form-control" v-model="service.description"></textarea>
                   </div>
                 </div>
 
@@ -340,82 +344,75 @@ export default {
 
                 <div class="row mb-4">
                   <div class="col-lg-3">
-                    <label for="price" class="form-label">Price</label>
+                    <label for="price" class="form-label">Prices</label>
                   </div>
                   <div class="col-lg-9">
-                    <input
-                      type="number"
-                      class="form-control"
-                      id="price"
-                      placeholder="Enter price"
-                      v-model="service.price"
-                      :class="{
-                        'is-invalid': isSubmited && v$.service.price.$error,
-                      }"
-                    />
-                    <div
-                      v-for="(item, index) in v$.service.price.$errors"
-                      :key="index"
-                      class="invalid-feedback"
-                    >
-                      <span v-if="item.$message">{{ item.$message }}</span>
+                    <div class="row">
+                      <div class="col-6">
+                        <div class="row mb-4">
+                          <div class="col-lg-3">
+                            <label for="onetime_price" class="form-label">One Time</label>
+                          </div>
+                          <div class="col-lg-9">
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="onetime_price"
+                              placeholder="Enter One Time Price"
+                              v-model="service.prices.onetime"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="row mb-4">
+                          <div class="col-lg-3">
+                            <label for="monthly_price" class="form-label">Monthly</label>
+                          </div>
+                          <div class="col-lg-9">
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="monthly_price"
+                              placeholder="Enter Monthly Price"
+                              v-model="service.prices.monthly"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <div class="row mb-4">
-                  <div class="col-lg-3">
-                    <label for="phone" class="form-label">Periodicity</label>
-                  </div>
-                  <div class="col-lg-9">
-                    <div class="mt-4 mt-lg-0">
-                      <div class="form-check form-check-inline">
-                        <input
-                          class="form-check-input"
-                          type="radio"
-                          id="one_time"
-                          value="one_time"
-                          v-model="service.tenure"
-                        />
-                        <label class="form-check-label" for="one_time"
-                          >One Time</label
-                        >
+                    <div class="row">
+                      <div class="col-6">
+                        <div class="row mb-4">
+                          <div class="col-lg-3">
+                            <label for="quaterly_price" class="form-label">Quaterly</label>
+                          </div>
+                          <div class="col-lg-9">
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="quaterly_price"
+                              placeholder="Enter Quaterly Price"
+                              v-model="service.prices.quaterly"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div class="form-check form-check-inline">
-                        <input
-                          class="form-check-input"
-                          type="radio"
-                          id="monthly"
-                          value="monthly"
-                          v-model="service.tenure"
-                        />
-                        <label class="form-check-label" for="monthly"
-                          >Monthly</label
-                        >
-                      </div>
-                      <div class="form-check form-check-inline">
-                        <input
-                          class="form-check-input"
-                          type="radio"
-                          id="quaterly"
-                          value="quaterly"
-                          v-model="service.tenure"
-                        />
-                        <label class="form-check-label" for="quaterly"
-                          >Quaterly</label
-                        >
-                      </div>
-                      <div class="form-check form-check-inline">
-                        <input
-                          class="form-check-input"
-                          type="radio"
-                          id="yearly"
-                          value="yearly"
-                          v-model="service.tenure"
-                        />
-                        <label class="form-check-label" for="yearly"
-                          >Yearly</label
-                        >
+                      <div class="col-6">
+                        <div class="row mb-4">
+                          <div class="col-lg-3">
+                            <label for="yearly_price" class="form-label">Yearly</label>
+                          </div>
+                          <div class="col-lg-9">
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="yearly_price"
+                              placeholder="Enter Yearly Price"
+                              v-model="service.prices.yearly"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -471,13 +468,22 @@ export default {
             <div class="text-end float-end">
               <button
                 type="submit"
-                 class="btn btn-primary align-items-center d-flex justify-content-center"
+                class="
+                  btn btn-primary
+                  align-items-center
+                  d-flex
+                  justify-content-center
+                "
                 @click="saveService"
               >
-                {{title}} Service
-                <div class="spinner-border loader-setup" role="status" v-if="loader">
-                        <span class="sr-only">Loading...</span>
-                      </div>
+                {{ title }} Service
+                <div
+                  class="spinner-border loader-setup"
+                  role="status"
+                  v-if="loader"
+                >
+                  <span class="sr-only">Loading...</span>
+                </div>
               </button>
             </div>
           </div>

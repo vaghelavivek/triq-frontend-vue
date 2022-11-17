@@ -58,5 +58,9 @@ export const actions = {
     let resp = await axios.get("/api/order/get-order-by-id/"+orderId);
     return resp;
   },
+  async getOrderDocumentByServiceId({},payload) {
+    let resp = await axios.post("/api/order/get-order-document-by-serviceid",payload);
+    return resp;
+  },
 
 };

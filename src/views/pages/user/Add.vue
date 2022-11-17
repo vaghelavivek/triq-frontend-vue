@@ -97,6 +97,7 @@ export default {
                   message: "User added.",
                   type: "success",
                 })
+                this.$router.push({ name: "Users" });
             }else{
               let message=res.data.message
               this.$toast.open({
@@ -142,6 +143,7 @@ export default {
                   message: "User updated.",
                   type: "success",
                 })
+                this.$router.push({ name: "Users" });
             }else{
               // let message=res.data.message
               // this.$toast.open({

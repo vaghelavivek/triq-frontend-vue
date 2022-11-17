@@ -53,6 +53,10 @@ export default {
     getDate(date) {
       return moment(date).format("MM/DD/YY");
     },
+    getPrice(prices) {
+      var priceData = JSON.parse(prices)
+      return `One Time: ${priceData.onetime}, Monthly: ${priceData.onetime}, Quaterly: ${priceData.quaterly}, Yearly: ${priceData.yearly}`;
+    },
     deleteServiceData(id) {
       Swal.fire({
         title: "Are you sure?",
@@ -153,7 +157,7 @@ export default {
                   <tr v-for="(service, index) in resultQuery" :key="index">
                     <td>{{ getDate(service.created_at) }}</td>
                     <td>{{ service.title }}</td>
-                    <td>{{ service.price }}</td>
+                    <td>{{ getPrice(service.prices) }}</td>
                     <td class="text-capitalize">{{ service.country }}</td>
                     <!-- <td>
                       <a href="javascript:void(0);" class="link-success"
