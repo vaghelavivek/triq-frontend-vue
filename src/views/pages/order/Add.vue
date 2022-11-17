@@ -33,9 +33,10 @@ export default {
       commentsData: [],
       comment: {
         id: null,
+        order_id: null,
         notes: null,
-        is_send_email: null,
-        is_personal_note: null,
+        is_send_email: true,
+        is_personal_note: true,
         attachment: null,
       },
       selectedService: null,
@@ -48,6 +49,11 @@ export default {
       },
       service_id: {
         required: helpers.withMessage("Service is required", required),
+      },
+    },
+    comment: {
+      notes: {
+        required: helpers.withMessage("Notes is required", required),
       },
     },
   },
@@ -90,6 +96,7 @@ export default {
       getServicesByUser: "service/getServicesByUser",
       getServiceById: "service/getServiceById",
       fetchUserLists: "users/fetchUserLists",
+      addOrderComment: "order/addOrderComment",
     }),
     clearOrder() {
       this.order = {
@@ -105,10 +112,12 @@ export default {
     },
     saveOrder() {
       this.isSubmited = true;
-      this.v$.$touch();
-      if (this.v$.$invalid) {
+      this.v$.order.$touch();
+      if (this.v$.order.$invalid) {
         return;
       }
+      this.loader = true;
+      this.disabled = true;
       console.log("order_documents", this.order.order_documents);
       var formdata = new FormData();
       formdata.append("id", this.order.id);
@@ -132,21 +141,15 @@ export default {
             this.$toast.success("Order added Successfully");
             this.$router.push({ name: "Orders" });
           }
+          this.loader = false;
+          this.disabled = false;
         })
         .catch((error) => {
+          this.loader = false;
+          this.disabled = false;
           console.log("error", error);
         });
     },
-    // addDocument() {
-    //   var doc = {
-    //     id: null,
-    //     name: null,
-    //   };
-    //   this.service.document_names.push(doc);
-    // },
-    // removeDocument(index) {
-    //   this.service.document_names.splice(index, 1);
-    // },
     getOrderData(orderId) {
       this.getOrderById(orderId)
         .then((res) => {
@@ -285,6 +288,49 @@ export default {
     getDate(date) {
       return moment(date).format("MM/DD/YY");
     },
+    onAttechmentChange(e) {
+      const file = e.target.files[0];
+      if (file) {
+        this.comment.attachment = file;
+      }
+      console.log("this.order.order_documents", this.order.order_documents);
+    },
+    clearComment() {
+      this.comment = {
+        id: null,
+        order_id: null,
+        notes: null,
+        is_send_email: true,
+        is_personal_note: true,
+        attachment: null,
+      };
+      this.v$.comment.$reset();
+    },
+    addAttechmemt() {
+      this.v$.comment.$touch();
+      if (this.v$.comment.$invalid) {
+        return;
+      }
+      var formdata = new FormData();
+      formdata.append("id", this.comment.id);
+      formdata.append("order_id", this.order.id);
+      formdata.append("notes", this.comment.notes);
+      formdata.append("is_send_email", this.comment.is_send_email);
+      formdata.append("is_personal_note", this.comment.is_personal_note);
+      formdata.append("attachment", this.comment.attachment);
+      this.addOrderComment(formdata)
+        .then((res) => {
+          if (res.data.status) {
+            var comment = res.data.data.comment;
+            this.commentsData.push(comment);
+            this.clearComment();
+            this.$toast.success("Comment Added");
+          }
+        })
+        .catch((error) => {
+          console.log("error", error);
+        });
+    },
   },
 };
 </script>
@@ -299,7 +345,7 @@ export default {
           <div class="card-header align-items-center d-flex">
             <h4 class="card-title mb-0 flex-grow-1">Add Order</h4>
           </div>
-          <pre>{{ commentsData }}</pre>
+          <!-- <pre>{{ commentsData }}</pre> -->
           <!-- <pre>{{ selectedService }}</pre> -->
           <!-- end card header -->
           <div class="card-body">
@@ -321,7 +367,17 @@ export default {
                       :create-option="true"
                       :options="usersData"
                       @select="getServicesByUserData"
+                      :class="{
+                        'is-invalid': isSubmited && v$.order.user_id.$error,
+                      }"
                     />
+                    <div
+                      v-for="(item, index) in v$.order.user_id.$errors"
+                      :key="index"
+                      class="invalid-feedback"
+                    >
+                      <span v-if="item.$message">{{ item.$message }}</span>
+                    </div>
                   </div>
                   <div class="col-lg-9" v-else>
                     <h6>{{ userData.name }}</h6>
@@ -340,7 +396,17 @@ export default {
                       :create-option="true"
                       :options="servicesData"
                       @select="getServiceDocumentData"
+                      :class="{
+                        'is-invalid': isSubmited && v$.order.service_id.$error,
+                      }"
                     />
+                    <div
+                      v-for="(item, index) in v$.order.service_id.$errors"
+                      :key="index"
+                      class="invalid-feedback"
+                    >
+                      <span v-if="item.$message">{{ item.$message }}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -490,40 +556,68 @@ export default {
                     />
                   </div>
                 </div>
+
+                <div class="text-start mt-5">
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    @click="saveOrder"
+                    :disabled="disabled"
+                  >
+                    Add Order
+                  </button>
+                  <div
+                    class="spinner-border loader-setup"
+                    role="status"
+                    v-if="loader"
+                  >
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                </div>
               </div>
               <div class="col-md-6">
-                <h3 class="mb-4">Order Document</h3>
                 <div
-                  class="row mb-4"
-                  v-for="(order_doc, index) in order.order_documents"
-                  :key="index"
+                  class="document"
+                  v-if="
+                    order.order_documents && order.order_documents.length > 0
+                  "
                 >
-                  <div class="col-lg-3">
-                    <label for="title" class="form-label">{{
-                      order_doc.service_documents_name
-                    }}</label>
-                  </div>
-                  <div class="col-lg-7">
-                    <input
-                      type="file"
-                      class="form-control"
-                      id="amount"
-                      @change="
-                        onOrderDocChange($event, order_doc.service_documents_id)
-                      "
-                    />
-                  </div>
-                  <div class="col-lg-2">
-                    <a href="javascript:void(0);" class="download-icon"
-                      ><i class="ri-download-2-line"></i
-                    ></a>
+                  <h3 class="mb-4">Order Document</h3>
+                  <div
+                    class="row mb-4"
+                    v-for="(order_doc, index) in order.order_documents"
+                    :key="index"
+                  >
+                    <div class="col-lg-3">
+                      <label for="title" class="form-label">{{
+                        order_doc.service_documents_name
+                      }}</label>
+                    </div>
+                    <div class="col-lg-7">
+                      <input
+                        type="file"
+                        class="form-control"
+                        id="amount"
+                        @change="
+                          onOrderDocChange(
+                            $event,
+                            order_doc.service_documents_id
+                          )
+                        "
+                      />
+                    </div>
+                    <div class="col-lg-2">
+                      <a href="javascript:void(0);" class="download-icon"
+                        ><i class="ri-download-2-line"></i
+                      ></a>
+                    </div>
                   </div>
                 </div>
 
                 <div class="history" v-if="commentsData.length > 0">
                   <h3 class="mb-2">Comment History</h3>
-                  <div class="card-body">
-                    <div class="table-responsive">
+                  <div class="card-body px-0">
+                    <div class="table-responsive table-bordered">
                       <table class="table align-middle table-nowrap mb-0">
                         <thead>
                           <tr>
@@ -555,31 +649,73 @@ export default {
                   </div>
                 </div>
 
-                <div class="row">
-                  <div class="col-8">
-                    <h3 class="mb-2">Add Comment</h3>
+                <div class="root-comment-div" v-if="order.id != null">
+                  <div class="row mb-3 mt-4">
+                    <div class="col-8">
+                      <h3>Add Comment</h3>
+                    </div>
+                    <div class="col-4">
+                      <input
+                        type="file"
+                        class="form-control"
+                        id="attchment"
+                        @change="onAttechmentChange($event)"
+                      />
+                    </div>
                   </div>
-                  <div class="col-4">
-                    <input
-                      type="file"
+                  <div class="add-comment">
+                    <textarea
                       class="form-control"
-                      id="attchment"
-                      @change="
-                        onOrderDocChange($event, order_doc.service_documents_id)
-                      "
-                    />
+                      v-model="comment.notes"
+                      :class="{
+                        'is-invalid': v$.comment.notes.$error,
+                      }"
+                    ></textarea>
+                    <div
+                      v-for="(item, index) in v$.comment.notes.$errors"
+                      :key="index"
+                      class="invalid-feedback"
+                    >
+                      <span v-if="item.$message">{{ item.$message }}</span>
+                    </div>
                   </div>
-                </div>
-                <div class="add-comment">
-                  <textarea class="form-control" v-model="comment.attchment"></textarea>
+                  <div class="d-flex justify-content-end mt-3">
+                    <div class="form-check mt-2 me-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value=""
+                        id="send-email-checkbox"
+                        v-model="comment.is_send_email"
+                      />
+                      <label class="form-check-label" for="send-email-checkbox"
+                        >Send Email</label
+                      >
+                    </div>
+
+                    <div class="form-check mt-2 me-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value=""
+                        id="note-checkbox"
+                        v-model="comment.is_personal_note"
+                      />
+                      <label class="form-check-label" for="note-checkbox"
+                        >Private Note</label
+                      >
+                    </div>
+
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      @click="addAttechmemt"
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div class="text-end">
-              <button type="submit" class="btn btn-primary" @click="saveOrder">
-                Add Order
-              </button>
             </div>
           </div>
           <!-- end card-body -->

@@ -62,5 +62,8 @@ export const actions = {
     let resp = await axios.post("/api/order/get-order-document-by-serviceid",payload);
     return resp;
   },
-
+  async addOrderComment({state }, payload) {
+    let resp = await axios.post("/api/order/add-order-comment", payload);
+    return resp;
+  },
 };
