@@ -1,7 +1,8 @@
 <script>
-  import NavBar from "@/components/nav-bar";
-  import RightBar from "@/components/right-bar";
-  import Footer from "@/components/footer";
+import NavBar from "@/components/nav-bar";
+import RightBar from "@/components/right-bar";
+import Footer from "@/components/footer";
+import {mapGetters } from 'vuex';
 
   export default {
     watch: {
@@ -10,6 +11,11 @@
         immediate: true,
         deep: true,
       },
+    },
+    computed: {
+      ...mapGetters({
+        userData: "auth/user",
+      })
     },
     methods: {
       onRoutechange(ele) {
@@ -107,13 +113,22 @@
               <li class="menu-title">
                 <span data-key="t-menu"> {{ $t("t-menu") }}</span>
               </li>
-              <li class="nav-item">
+
+              <li class="nav-item" v-if="userData && userData.role_id != 3">
                 <router-link to="/admin/users" class="nav-link" data-key="t-calendar">
                   <i class="bx bxs-user"></i>
                   <span data-key="t-dashboards">Users</span>
                 </router-link>
               </li>
-              <li class="nav-item">
+
+              <li class="nav-item" v-if="userData && userData.role_id == 3">
+                <router-link to="/services" class="nav-link" data-key="t-calendar">
+                  <i class="bx bxs-user"></i>
+                  <span data-key="t-dashboards">Services</span>
+                </router-link>
+              </li>
+
+              <li class="nav-item" v-if="userData && userData.role_id != 3">
                 <router-link to="/admin/services" class="nav-link" data-key="t-calendar">
                   <i class="bx bxs-user"></i>
                   <span data-key="t-dashboards">Services</span>

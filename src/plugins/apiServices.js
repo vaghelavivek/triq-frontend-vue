@@ -2,7 +2,8 @@ import axios from 'axios';
 import store from '../state/store'
 // import { useStore } from 'vuex'
 const customAxios = axios.create({
-    baseURL: process.env.VUE_APP_ENVIROMENT != 'local' ? process.env.VUE_APP_API_URL : "http://127.0.0.1:8000",
+    baseURL: process.env.VUE_APP_ENVIRONMENT != 'local' ? process.env.VUE_APP_API_URL : process.env.VUE_APP_LOCAL_URL,
+    // baseURL: "http://etriqapi.thinkncode.com"
 });
 const requestHandler = request => {
     let idToken = store.state.auth.idToken;

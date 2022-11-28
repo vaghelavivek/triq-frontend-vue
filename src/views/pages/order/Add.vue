@@ -156,7 +156,7 @@ export default {
           console.log(res);
           if (res.data.status) {
             let order = res.data.data.order;
-            let orderDocuments = order.order_documents;
+            // let orderDocuments = order.order_documents;
             let orderUpdates = order.order_updates;
             if (order) {
               this.order = {

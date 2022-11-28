@@ -1145,4 +1145,11 @@ export default [
     meta: { title: "Edit Order", authRequired: true,isSuperAdmin:false},
     component: () => import("../views/pages/order/Add"),
   },
+
+  {
+    path: "/services",
+    name: "UserServices",
+    meta: { title: "Services", authRequired: true,isSuperAdmin:false},
+    component: () => import("../views/pages/Service"),
+  },
 ];

@@ -17,8 +17,8 @@ export const mutations = {
 };
 
 export const actions = {
-  // eslint-disable-next-line no-unused-vars
-  async addOrder({state }, data) {
+  // eslint-disable-next-line no-unused-vars, no-empty-pattern
+  async addOrder({}, data) {
     let resp = await axios.post("/api/order/add-order", data);
     // if (resp.data.status == true) {
     //   state.orders.unshift(resp.data.data.order);
@@ -58,11 +58,13 @@ export const actions = {
     let resp = await axios.get("/api/order/get-order-by-id/"+orderId);
     return resp;
   },
+  // eslint-disable-next-line no-empty-pattern
   async getOrderDocumentByServiceId({},payload) {
     let resp = await axios.post("/api/order/get-order-document-by-serviceid",payload);
     return resp;
   },
-  async addOrderComment({state }, payload) {
+  // eslint-disable-next-line no-empty-pattern
+  async addOrderComment({}, payload) {
     let resp = await axios.post("/api/order/add-order-comment", payload);
     return resp;
   },
