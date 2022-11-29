@@ -1152,4 +1152,10 @@ export default [
     meta: { title: "Services", authRequired: true,isSuperAdmin:false},
     component: () => import("../views/pages/Service"),
   },
+  {
+    path: "/service/order/:id",
+    name: "ServiceOrder",
+    meta: { title: "Order Service", authRequired: true,isSuperAdmin:false},
+    component: () => import("../views/pages/order/Add"),
+  },
 ];

@@ -78,6 +78,9 @@ export default {
       });
       return data;
     },
+    isServiceOrder(){
+      return this.$route.name == "ServiceOrder" && this.$route.params.id ? true : false
+    }
   },
   mounted() {
     if (this.$route.name == "EditOrder" && this.$route.params.id) {
@@ -85,6 +88,12 @@ export default {
     }
     if (this.userData && this.userData.role_id == 3) {
       this.getServicesByUserData();
+    }
+
+    if (this.$route.name == "ServiceOrder" && this.$route.params.id) {
+      this.order.service_id = parseInt(atob(this.$route.params.id))
+      this.order.user_id = this.userData.id
+      this.getServiceDocumentData();
     }
     this.fetchUserLists();
     // this.setupUserData();
@@ -345,8 +354,7 @@ export default {
           <div class="card-header align-items-center d-flex">
             <h4 class="card-title mb-0 flex-grow-1">Add Order</h4>
           </div>
-          <!-- <pre>{{ commentsData }}</pre> -->
-          <!-- <pre>{{ selectedService }}</pre> -->
+          <pre>{{ order }}</pre>
           <!-- end card header -->
           <div class="card-body">
             <div class="row">
@@ -395,6 +403,7 @@ export default {
                       :searchable="true"
                       :create-option="true"
                       :options="servicesData"
+                      :disabled="isServiceOrder"
                       @select="getServiceDocumentData"
                       :class="{
                         'is-invalid': isSubmited && v$.order.service_id.$error,
@@ -485,11 +494,12 @@ export default {
                       id="final_amount"
                       placeholder="Enter Final Amount"
                       v-model="order.final_amount"
+                      :disabled="isServiceOrder"
                     />
                   </div>
                 </div>
 
-                <div class="row mb-4">
+                <div class="row mb-4" v-if="!isServiceOrder">
                   <div class="col-lg-3">
                     <label for="phone" class="form-label">Payment Status</label>
                   </div>
@@ -535,7 +545,7 @@ export default {
                   </div>
                 </div>
 
-                <div class="row mb-4">
+                <div class="row mb-4" v-if="!isServiceOrder">
                   <div class="col-lg-3">
                     <label for="service_status" class="form-label"
                       >Service Status</label
@@ -575,7 +585,7 @@ export default {
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-6" v-if="!isServiceOrder">
                 <div
                   class="document"
                   v-if="

@@ -67,6 +67,14 @@ export default {
             }
             return null
         },
+        buyService(service){
+          this.$router.push({
+            name: 'ServiceOrder',
+            params: {
+              id: btoa(service.id)
+            },
+          });
+        }
     },
 };
 </script>
@@ -93,7 +101,7 @@ export default {
                 <h5 class="fs-14 mb-1">{{service.title}}</h5>
               </div>
               <div>
-                <button class="btn btn-soft-primary btn-sm"
+                <button class="btn btn-soft-primary btn-sm" @click="buyService(service)"
                   >
                   <i class="ri-shopping-cart-line"></i> Buy Now</button>
               </div>
