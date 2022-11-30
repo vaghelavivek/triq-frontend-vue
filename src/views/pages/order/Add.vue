@@ -48,7 +48,8 @@ export default {
       disabled:false,
       paytmPayment:null,
       openInPopup:true,
-      active:false
+      active:false,
+      isEdit: false
     };
   },
   validations: {
@@ -60,7 +61,7 @@ export default {
         required: helpers.withMessage("Service is required", required),
       },
       final_amount: {
-        required: helpers.withMessage("Phone is required", required),
+        required: helpers.withMessage("Amount is required", required),
         numeric: helpers.withMessage("Please enter only numbers", numeric),
       },
     },
@@ -96,14 +97,22 @@ export default {
     },
     isServiceOrder(){
       return this.$route.name == "ServiceOrder" && this.$route.params.id ? true : false
-    }
+    },
+    isAdmin(){
+      return this.userData && this.userData.role_id != 3 ? true : false
+    },
+    isUserOrderAdd(){
+      return this.$route.name == "UserOrderAdd" ? true : false
+    },
   },
   mounted() {
-    if (this.$route.name == "EditOrder" && this.$route.params.id) {
-      this.getOrderData(this.$route.params.id);
+    if ((this.$route.name == "EditOrder" || this.$route.name == "UserOrderEdit") && this.$route.params.id) {
+      this.isEdit = true
+      this.getOrderData(parseInt(atob(this.$route.params.id)));
     }
     if (this.userData && this.userData.role_id == 3) {
       this.getServicesByUserData();
+      this.order.user_id = this.userData.id
     }
 
     if (this.$route.name == "ServiceOrder" && this.$route.params.id) {
@@ -501,7 +510,7 @@ export default {
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1" @click="ClosePaytmPopup()">Add Order</h4>
+            <h4 class="card-title mb-0 flex-grow-1" @click="ClosePaytmPopup()">{{order.id ? 'Edit Order' : 'Add Order'}} {{isAdmin}}</h4>
           </div>
           <!-- end card header -->
           <div class="card-body">
@@ -551,7 +560,7 @@ export default {
                       :searchable="true"
                       :create-option="true"
                       :options="servicesData"
-                      :disabled="isServiceOrder"
+                      :disabled="(isServiceOrder || isEdit)"
                       @select="getServiceDocumentData"
                       :class="{
                         'is-invalid': isSubmited && v$.order.service_id.$error,
@@ -581,6 +590,7 @@ export default {
                           value="onetime"
                           v-model="order.tenure"
                           @change="getServicePrice"
+                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
                         />
                         <label class="form-check-label" for="onetime"
                           >One Time</label
@@ -594,6 +604,7 @@ export default {
                           value="monthly"
                           v-model="order.tenure"
                           @change="getServicePrice"
+                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
                         />
                         <label class="form-check-label" for="monthly"
                           >Monthly</label
@@ -607,6 +618,7 @@ export default {
                           value="quaterly"
                           v-model="order.tenure"
                           @change="getServicePrice"
+                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
                         />
                         <label class="form-check-label" for="quaterly"
                           >Quaterly</label
@@ -620,6 +632,7 @@ export default {
                           value="yearly"
                           v-model="order.tenure"
                           @change="getServicePrice"
+                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
                         />
                         <label class="form-check-label" for="yearly"
                           >Yearly</label
@@ -642,7 +655,7 @@ export default {
                       id="final_amount"
                       placeholder="Enter Final Amount"
                       v-model="order.final_amount"
-                      :disabled="isServiceOrder"
+                      :disabled="(isServiceOrder || !isAdmin)"
                       :class="{
                         'is-invalid': isSubmited && v$.order.final_amount.$error,
                       }"
@@ -657,7 +670,7 @@ export default {
                   </div>
                 </div>
 
-                <div class="row mb-4" v-if="!isServiceOrder">
+                <div class="row mb-4" v-if="(!isServiceOrder && isAdmin)">
                   <div class="col-lg-3">
                     <label for="phone" class="form-label">Payment Status</label>
                   </div>
@@ -703,7 +716,7 @@ export default {
                   </div>
                 </div>
 
-                <div class="row mb-4" v-if="!isServiceOrder">
+                <div class="row mb-4" v-if="(!isServiceOrder && isAdmin)">
                   <div class="col-lg-3">
                     <label for="service_status" class="form-label"
                       >Service Status</label
@@ -727,7 +740,7 @@ export default {
 
                 <div class="text-start mt-5">
                   <button
-                    v-if="isServiceOrder"
+                    v-if="(isServiceOrder || isUserOrderAdd)"
                     type="submit"
                     class="align-items-center btn btn-primary d-flex"
                     @click="initPayment"
@@ -749,7 +762,7 @@ export default {
                     @click="saveOrder"
                     :disabled="disabled"
                   >
-                    Add Order 
+                    {{isEdit ? 'Update Order' : 'Add Order'}} 
                     <div
                     class="spinner-border loader-setup"
                     role="status"
@@ -760,7 +773,7 @@ export default {
                   </button>
                 </div>
               </div>
-              <div class="col-md-6" v-if="!isServiceOrder">
+              <div class="col-md-6" v-if="(!isServiceOrder && (isAdmin || isEdit))">
                 <div
                   class="document"
                   v-if="

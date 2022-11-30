@@ -60,6 +60,34 @@ export default {
         }
       });
     },
+    editOrderData(orderId){
+      if(this.userData && this.userData.role_id != 3){
+        this.$router.push({
+          name: 'EditOrder',
+          params: {
+            id: btoa(orderId)
+          },
+        });
+      }else{
+        this.$router.push({
+          name: 'UserOrderEdit',
+          params: {
+            id: btoa(orderId)
+          },
+        });
+      }
+    },
+    addOrderRedirect(){
+       if(this.userData && this.userData.role_id != 3){
+        this.$router.push({
+          name: 'AddOrder'
+        });
+      }else{
+        this.$router.push({
+          name: 'UserOrderAdd'
+        });
+      }
+    }
   },
 };
 </script>
@@ -97,12 +125,13 @@ export default {
           <div class="card-header align-items-center d-flex">
             <h4 class="card-title mb-0 flex-grow-1">Orders</h4>
             <div class="flex-shrink-0">
-              <router-link
+              <!-- <router-link
                 to="/admin/order/add"
                 class="btn btn-primary waves-effect waves-light"
               >
                 Add Order
-              </router-link>
+              </router-link> -->
+              <button class="btn btn-primary waves-effect waves-light" @click="addOrderRedirect">Add Order</button>
             </div>
           </div>
           <!-- end card header -->
@@ -112,8 +141,8 @@ export default {
                 <thead>
                   <tr>
                     <th scope="col">Date</th>
-                    <th scope="col">User</th>
-                    <th scope="col">Order</th>
+                    <th scope="col" v-if="(userData && userData.role_id != 3)">User</th>
+                    <th scope="col">Service</th>
                     <th scope="col">Order Status</th>
                     <th scope="col">Payment Status</th>
                     <th scope="col">Assigned User</th>
@@ -123,15 +152,16 @@ export default {
                 <tbody>
                   <tr v-for="(order, index) in getOrders" :key="index">
                     <td>{{ getDate(order.created_at) }}</td>
-                    <td>{{ order.user_id }}</td>
-                    <td>{{ order.service_id }}</td>
+                    <td v-if="(userData && userData.role_id != 3)">{{ order.user && order.user.name ? order.user.name : '' }}</td>
+                    <td>{{ order.service && order.service.title ? order.service.title : ''  }}</td>
                     <td>{{ order.service_status }}</td>
                     <td>{{ order.payment_status }}</td>
                     <td>{{ order.assigned_user }}</td>
                     <td>
                       <div class="hstack gap-3 flex-wrap">
-                        <router-link class="link-success fs-15" :to="{name: 'EditOrder',params: { id: order.id },}"
-                          ><i class="ri-edit-2-line"></i></router-link>
+                        <a class="link-success fs-15" @click="editOrderData(order.id)"><i class="ri-edit-2-line"></i></a>
+                        <!-- <router-link class="link-success fs-15" :to="{name: 'EditOrder',params: { id: order.id },}"
+                          ><i class="ri-edit-2-line"></i></router-link> -->
                         <a
                           href="javascript:void(0);"
                           @click="deleteOrderData(order.id)"
