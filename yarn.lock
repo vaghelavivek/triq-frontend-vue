@@ -7732,6 +7732,13 @@ path-type@^3.0.0:
   dependencies:
     pify "^3.0.0"
 
+paytm-blink-checkout-vue@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/paytm-blink-checkout-vue/-/paytm-blink-checkout-vue-0.1.0.tgz#cb3bc428651f2740d00c0753a5a78c8e9abcea2c"
+  integrity sha512-6Gwz7ETgdZiSWjJaxP6VR+8fsj5o5T7y5QSDV6SlzNnsjg0k0yofQLkYPYM+7vLjHxFTmqwdaIXsxyqZNtEWWQ==
+  dependencies:
+    vue-demi latest
+
 pbkdf2@^3.0.3:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/pbkdf2/-/pbkdf2-3.1.2.tgz#dd822aa0887580e52f1a039dc3eda108efae3075"
@@ -10042,7 +10049,7 @@ vue-count-to@^1.0.13:
   resolved "https://registry.yarnpkg.com/vue-count-to/-/vue-count-to-1.0.13.tgz#3e7573ea6e64c2b2972f64e0a2ab2e23c7590ff3"
   integrity sha512-6R4OVBVNtQTlcbXu6SJ8ENR35M2/CdWt3Jmv57jOUM+1ojiFmjVGvZPH8DfHpMDSA+ITs+EW5V6qthADxeyYOQ==
 
-vue-demi@^0.13.11:
+vue-demi@^0.13.11, vue-demi@latest:
   version "0.13.11"
   resolved "https://registry.yarnpkg.com/vue-demi/-/vue-demi-0.13.11.tgz#7d90369bdae8974d87b1973564ad390182410d99"
   integrity sha512-IR8HoEEGM65YY3ZJYAjMlKygDQn25D5ajNFNoKh9RSDMQtlzCxtfQjdQgv9jjK+m3377SsJXY8ysq8kLCZL25A==
@@ -10116,6 +10123,11 @@ vue-loader@^15.9.2:
     loader-utils "^1.1.0"
     vue-hot-reload-api "^2.3.0"
     vue-style-loader "^4.1.0"
+
+vue-loading-overlay@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/vue-loading-overlay/-/vue-loading-overlay-6.0.2.tgz#69c844067d4344f72474f87f68020eb066763203"
+  integrity sha512-5GCvv6hPjNfHg+tKnLkk6yO/b/AdCCkdZb2dfrVFOuDyJz38dbm34k6oohVy/xIoFzPGsEEVtwCxq5G3RIYZ1Q==
 
 vue-prismjs@^1.2.0:
   version "1.2.0"

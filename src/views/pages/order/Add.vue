@@ -6,11 +6,12 @@ import "@vueform/multiselect/themes/default.css";
 
 import "prismjs";
 import "prismjs/themes/prism.css";
-import { required, helpers } from "@vuelidate/validators";
+import { required, helpers,numeric } from "@vuelidate/validators";
 import useVuelidate from "@vuelidate/core";
 import { mapActions, mapGetters } from "vuex";
 import moment from "moment";
-
+import { CheckoutProvider, Checkout } from 'paytm-blink-checkout-vue'
+import Loader from '@/components/loader'
 export default {
   setup() {
     return { v$: useVuelidate() };
@@ -40,6 +41,14 @@ export default {
         attachment: null,
       },
       selectedService: null,
+      paytmCred:{},
+      showPaytm:false,
+      config:{},
+      loader:false,
+      disabled:false,
+      paytmPayment:null,
+      openInPopup:true,
+      active:false
     };
   },
   validations: {
@@ -49,6 +58,10 @@ export default {
       },
       service_id: {
         required: helpers.withMessage("Service is required", required),
+      },
+      final_amount: {
+        required: helpers.withMessage("Phone is required", required),
+        numeric: helpers.withMessage("Please enter only numbers", numeric),
       },
     },
     comment: {
@@ -61,6 +74,9 @@ export default {
     Layout,
     PageHeader,
     Multiselect,
+    CheckoutProvider,
+    Checkout,
+    Loader
   },
   computed: {
     ...mapGetters({
@@ -106,6 +122,8 @@ export default {
       getServiceById: "service/getServiceById",
       fetchUserLists: "users/fetchUserLists",
       addOrderComment: "order/addOrderComment",
+      initiateTransaction: "payment/initiateTransaction",
+      addUserOrderDB: "order/addUserOrder",
     }),
     clearOrder() {
       this.order = {
@@ -340,6 +358,136 @@ export default {
           console.log("error", error);
         });
     },
+    initPayment(){
+       this.openInPopup=true
+       this.isSubmited = true;
+      this.v$.order.$touch();
+      if (this.v$.order.$invalid) {
+        return;
+      }
+      this.loader = true;
+      this.disabled = true;
+      let payload={
+        amount:this.order.final_amount.toFixed(2),
+        redirect_url:window.location.href
+      }
+      this.initiateTransaction(payload).then((res)=>{
+              if(res.data.status){
+                this.paytmCred=res.data.data.transaction
+                this.openPaytmModel()
+              }else{
+                this.loader=false
+                this.disabled=false
+                let message=res.data.message
+                this.$toast.open({
+                    message: message,
+                    type: "error",
+                  })
+              }
+      }).catch((error)=>{
+        console.log(error)
+            this.loader=false
+            this.disabled=false
+                  this.$toast.open({
+                    message: 'Server Error',
+                    type: "error",
+                  })  
+          })
+    },
+    openPaytmModel(){
+      let self=this
+      this.showPaytm=true
+      this.config = {
+              "root": "",
+              "flow": "DEFAULT",
+              "data": {
+                "orderId": this.paytmCred.order_id,
+                "token": this.paytmCred.token,
+                "tokenType": "TXN_TOKEN",
+                "amount": this.order.final_amount.toFixed(2),
+                 "userDetail": {
+                    "custId": this.paytmCred.custId,
+                    "email": this.paytmCred.email
+                }
+              },
+              "merchant": {
+                    "mid": "MLnbED55834809939060",
+                    "name": "",
+                    "redirect": false
+                },
+              "handler": {
+                "notifyMerchant": function(eventName,data){
+                  console.log("notifyMerchant handler function called");
+                  console.log("eventName => ",eventName);
+                  console.log("data => ",data);
+                },
+                "transactionStatus":function(data){
+                  // window.Paytm.CheckoutJS.invoke();
+                  self.paytmPayment=data
+                  self.ClosePaytmPopup()
+                }  
+              }
+            };
+    },
+    ClosePaytmPopup(){
+      const element = document.getElementById("paytm-checkoutjs");
+      element.remove();
+      this.showPaytm=false
+      this.config=null
+      this.openInPopup=false
+      console.log(this.paytmPayment.STATUS,'sdsd')
+      if(this.paytmPayment.STATUS == 'TXN_SUCCESS'){
+          this.addUserOrder();
+      }else{
+          this.loader=false
+          this.disabled=false
+         let message=this.paytmPayment.RESPMSG
+                this.$toast.open({
+            message: message,
+            type: "error",
+          })
+      }
+    },
+    addUserOrder(){
+        let payload={
+          ...this.order,
+          transaction_id:this.paytmPayment.TXNID,
+          paytm_order_id:this.paytmPayment.ORDERID,
+          bank_transaction_id:this.paytmPayment.BANKTXNID,
+          payment_amount:this.paytmPayment.TXNAMOUNT,
+          bank_name:this.paytmPayment.BANKNAME,
+          currency:this.paytmPayment.CURRENCY,
+          payment_status:'received',
+          gateway_name:this.paytmPayment.GATEWAYNAME,
+          payment_mode:this.paytmPayment.PAYMENTMODE
+        }
+        this.active=true
+        this.addUserOrderDB(payload).then((res)=>{
+          if(res.data.status){
+            this.active=false
+             this.$toast.open({
+                    message: "order added",
+                    type: "success",
+                  })
+              this.$router.push({name:"OrderUser"})
+          }else{
+            this.active=false
+            let message=res.data.message
+             this.$toast.open({
+                    message: message,
+                    type: "error",
+                  })
+          }
+        }).catch(()=>{
+                   this.active=false
+                    this.loader=false
+                    this.disabled=false
+                  this.$toast.open({
+                    message: 'Server Error',
+                    type: "error",
+                  }) 
+        });
+    }
   },
 };
 </script>
@@ -347,14 +495,14 @@ export default {
 <template>
   <Layout>
     <PageHeader />
-
+    <Loader :active="active"/>
     <div class="row">
+      <!-- <pre>{{paytmPayment}}</pre> -->
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1">Add Order</h4>
+            <h4 class="card-title mb-0 flex-grow-1" @click="ClosePaytmPopup()">Add Order</h4>
           </div>
-          <pre>{{ order }}</pre>
           <!-- end card header -->
           <div class="card-body">
             <div class="row">
@@ -495,7 +643,17 @@ export default {
                       placeholder="Enter Final Amount"
                       v-model="order.final_amount"
                       :disabled="isServiceOrder"
+                      :class="{
+                        'is-invalid': isSubmited && v$.order.final_amount.$error,
+                      }"
                     />
+                   <div
+                      v-for="(item, index) in v$.order.final_amount.$errors"
+                      :key="index"
+                      class="invalid-feedback"
+                    >
+                      <span v-if="item.$message">{{ item.$message }}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -569,20 +727,37 @@ export default {
 
                 <div class="text-start mt-5">
                   <button
+                    v-if="isServiceOrder"
                     type="submit"
-                    class="btn btn-primary"
-                    @click="saveOrder"
+                    class="align-items-center btn btn-primary d-flex"
+                    @click="initPayment"
                     :disabled="disabled"
                   >
                     Add Order
-                  </button>
-                  <div
+                    <div
                     class="spinner-border loader-setup"
                     role="status"
                     v-if="loader"
                   >
                     <span class="sr-only">Loading...</span>
                   </div>
+                  </button>
+                  <button
+                    v-else
+                    type="submit"
+                    class="align-items-center btn btn-primary d-flex"
+                    @click="saveOrder"
+                    :disabled="disabled"
+                  >
+                    Add Order 
+                    <div
+                    class="spinner-border loader-setup"
+                    role="status"
+                    v-if="loader"
+                  >
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  </button>
                 </div>
               </div>
               <div class="col-md-6" v-if="!isServiceOrder">
@@ -735,9 +910,10 @@ export default {
       <!-- end col -->
 
       <!-- end col -->
+          <CheckoutProvider :config="config" v-if="showPaytm" :openInPopup="openInPopup" env="STAGE">
+              <Checkout v-if="showPaytm"/>
+        </CheckoutProvider>
     </div>
-
-    <!--end row-->
   </Layout>
 </template>
 <style scoped>

@@ -68,4 +68,9 @@ export const actions = {
     let resp = await axios.post("/api/order/add-order-comment", payload);
     return resp;
   },
+  // eslint-disable-next-line no-empty-pattern
+  async addUserOrder({}, payload) {
+    let resp = await axios.post("/api/order/add-user-order", payload);
+    return resp;
+  },
 };

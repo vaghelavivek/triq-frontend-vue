@@ -135,7 +135,11 @@ import {mapGetters } from 'vuex';
                 </router-link>
               </li>
               <li class="nav-item">
-                <router-link to="/admin/orders" class="nav-link" data-key="t-calendar">
+                <router-link to="/admin/orders" class="nav-link" data-key="t-calendar" v-if="userData && userData.role_id != 3">
+                  <i class="bx bxs-user"></i>
+                  <span data-key="t-dashboards">Orders</span>
+                </router-link>
+                <router-link to="/orders" class="nav-link" data-key="t-calendar" v-else>
                   <i class="bx bxs-user"></i>
                   <span data-key="t-dashboards">Orders</span>
                 </router-link>
