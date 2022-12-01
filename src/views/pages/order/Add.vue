@@ -49,7 +49,8 @@ export default {
       paytmPayment:null,
       openInPopup:true,
       active:false,
-      isEdit: false
+      isEdit: false,
+      assetUrl: process.env.VUE_APP_ENVIRONMENT != 'local' ? process.env.VUE_APP_API_URL : process.env.VUE_APP_LOCAL_URL,
     };
   },
   validations: {
@@ -133,6 +134,7 @@ export default {
       addOrderComment: "order/addOrderComment",
       initiateTransaction: "payment/initiateTransaction",
       addUserOrderDB: "order/addUserOrder",
+      updateOrder: "order/updateOrder",
     }),
     clearOrder() {
       this.order = {
@@ -154,7 +156,6 @@ export default {
       }
       this.loader = true;
       this.disabled = true;
-      console.log("order_documents", this.order.order_documents);
       var formdata = new FormData();
       formdata.append("id", this.order.id);
       formdata.append("user_id", this.order.user_id);
@@ -189,10 +190,9 @@ export default {
     getOrderData(orderId) {
       this.getOrderById(orderId)
         .then((res) => {
-          console.log(res);
           if (res.data.status) {
             let order = res.data.data.order;
-            // let orderDocuments = order.order_documents;
+            let orderDocuments = order.order_documents;
             let orderUpdates = order.order_updates;
             if (order) {
               this.order = {
@@ -205,11 +205,23 @@ export default {
                 service_status: order.service_status,
                 order_documents: [],
               };
+              var nameDocument = [];
+              orderDocuments.map((doc) => {
+                var docData = {
+                  id: doc.id,
+                  service_documents_id: doc.service_documents_id,
+                  service_documents_name: doc.service_doc && doc.service_doc.name ? doc.service_doc.name : null,
+                  uploaded_file: doc.uploaded_file,
+                };
+                nameDocument.push(docData);
+              });
+              this.order.order_documents = nameDocument;
+
               this.commentsData = orderUpdates;
             }
 
             this.getServicesByUserData();
-            this.getServiceDocumentData();
+            // this.getServiceDocumentData();
 
             // var nameDocument = [];
             // serviceDocument.map((doc) => {
@@ -238,7 +250,6 @@ export default {
       }
       this.getServicesByUser(userId)
         .then((res) => {
-          console.log(res);
           if (res.data.status) {
             var services = res.data.data.services;
             var serData = [];
@@ -249,7 +260,6 @@ export default {
               };
               serData.push(payload);
             });
-            console.log("serData", serData);
             this.servicesData = serData;
           } else {
             this.servicesData = [];
@@ -279,7 +289,6 @@ export default {
             let serviceDocument = service.service_document;
             var nameDocument = [];
             serviceDocument.map((doc) => {
-              console.log("doc data", doc);
               var docData = {
                 id: null,
                 service_documents_id: doc.id,
@@ -290,6 +299,10 @@ export default {
             });
             this.order.order_documents = nameDocument;
             this.getServicePrice();
+          }else{
+            this.selectedService = null
+            this.order.order_documents = null;
+            this.order.final_amount = 0;
           }
         })
         .catch((e) => {
@@ -306,10 +319,8 @@ export default {
           }
         });
       }
-      console.log("this.order.order_documents", this.order.order_documents);
     },
     getServicePrice() {
-      console.log("get price");
       var servicePrices = JSON.parse(this.selectedService.prices);
       if (this.order.tenure == "onetime")
         this.order.final_amount = servicePrices.onetime;
@@ -329,7 +340,6 @@ export default {
       if (file) {
         this.comment.attachment = file;
       }
-      console.log("this.order.order_documents", this.order.order_documents);
     },
     clearComment() {
       this.comment = {
@@ -496,6 +506,53 @@ export default {
                     type: "error",
                   }) 
         });
+    },
+    updateOrderData() {
+      this.isSubmited = true;
+      this.v$.order.$touch();
+      if (this.v$.order.$invalid) {
+        return;
+      }
+      this.loader = true;
+      this.disabled = true;
+      var formdata = new FormData();
+      formdata.append("id", this.order.id);
+      this.order.order_documents.map((doc) => {
+        formdata.append(
+          "order_documents_" + doc.service_documents_id,
+          doc.uploaded_file
+        );
+      });
+      this.updateOrder(formdata)
+        .then((res) => {
+          if (res.data.status) {
+            this.isSubmited = false;
+            this.clearOrder();
+            this.$toast.success("Order Updated Successfully");
+            this.$router.push({ name: "Orders" });
+          }
+          this.loader = false;
+          this.disabled = false;
+        })
+        .catch((error) => {
+          this.loader = false;
+          this.disabled = false;
+          console.log("error", error);
+        });
+    },
+    downloadFile(file){
+      if(file){
+        var link = document.createElement("a");
+        let name = (file?.split("/") || [])
+        name = name[name?.length-1]
+        link.setAttribute('download', name);
+        link.href = file;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+     
     }
   },
 };
@@ -510,7 +567,7 @@ export default {
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1" @click="ClosePaytmPopup()">{{order.id ? 'Edit Order' : 'Add Order'}} {{isAdmin}}</h4>
+            <h4 class="card-title mb-0 flex-grow-1" @click="ClosePaytmPopup()">{{order.id ? 'Edit Order' : 'Add Order'}}</h4>
           </div>
           <!-- end card header -->
           <div class="card-body">
@@ -560,7 +617,7 @@ export default {
                       :searchable="true"
                       :create-option="true"
                       :options="servicesData"
-                      :disabled="(isServiceOrder || isEdit)"
+                      :disabled="((isServiceOrder || isEdit) && !isAdmin)"
                       @select="getServiceDocumentData"
                       :class="{
                         'is-invalid': isSubmited && v$.order.service_id.$error,
@@ -755,6 +812,24 @@ export default {
                     <span class="sr-only">Loading...</span>
                   </div>
                   </button>
+
+                  <button
+                    v-else-if="(isEdit && !isAdmin)"
+                    type="submit"
+                    class="align-items-center btn btn-primary d-flex"
+                    @click="updateOrderData"
+                    :disabled="disabled"
+                  >
+                    {{isEdit ? 'Update Order' : 'Add Order'}} 
+                    <div
+                    class="spinner-border loader-setup"
+                    role="status"
+                    v-if="loader"
+                  >
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  </button>
+
                   <button
                     v-else
                     type="submit"
@@ -805,7 +880,10 @@ export default {
                       />
                     </div>
                     <div class="col-lg-2">
-                      <a href="javascript:void(0);" class="download-icon"
+                      <!-- <a :href="`${assetUrl}/storage/${order_doc.uploaded_file}`" download="" class="download-icon"
+                        ><i class="ri-download-2-line"></i
+                      ></a> -->
+                      <a @click="downloadFile(`${assetUrl}/storage/${order_doc.uploaded_file}`)" class="download-icon"
                         ><i class="ri-download-2-line"></i
                       ></a>
                     </div>
