@@ -647,7 +647,7 @@ export default {
                           value="onetime"
                           v-model="order.tenure"
                           @change="getServicePrice"
-                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
+                          :disabled="(isEdit && !isAdmin)"
                         />
                         <label class="form-check-label" for="onetime"
                           >One Time</label
@@ -661,7 +661,7 @@ export default {
                           value="monthly"
                           v-model="order.tenure"
                           @change="getServicePrice"
-                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
+                          :disabled="(isEdit && !isAdmin)"
                         />
                         <label class="form-check-label" for="monthly"
                           >Monthly</label
@@ -675,7 +675,7 @@ export default {
                           value="quaterly"
                           v-model="order.tenure"
                           @change="getServicePrice"
-                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
+                          :disabled="(isEdit && !isAdmin)"
                         />
                         <label class="form-check-label" for="quaterly"
                           >Quaterly</label
@@ -689,7 +689,7 @@ export default {
                           value="yearly"
                           v-model="order.tenure"
                           @change="getServicePrice"
-                          :disabled="((isServiceOrder || isEdit) && !isAdmin)"
+                          :disabled="(isEdit && !isAdmin)"
                         />
                         <label class="form-check-label" for="yearly"
                           >Yearly</label

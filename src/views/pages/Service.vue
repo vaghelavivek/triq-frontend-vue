@@ -85,9 +85,9 @@ export default {
     <div class="row">
       <div class="col-xxl-3 col-md-6 mb-3" v-for="(service,index) in services" :key="index">
         <div class="card mb-2">
-          <div class="card-body">
+          <div class="card-body pb-0">
             <div class="d-flex mb-3 align-items-center">
-              <div class="flex-shrink-0 avatar-sm">
+              <div class="flex-shrink-0 avatar-lg">
                 <div class="avatar-title bg-light rounded" v-if="service.service_image">
                   <img
                   :src="getImage(service.service_image)"
@@ -125,5 +125,6 @@ export default {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 7px;
 }
 </style>
