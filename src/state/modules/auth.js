@@ -58,7 +58,7 @@ export const actions = {
   async generateToken({ commit }, data) {
     let resp = await axios.post('/api/login-using-firebase', data)
     if(resp.data.status==true){
-      commit('SET_USER',resp.data.data.user_data)
+    
       commit('SET_ID_TOKEN',resp.data.data.accesstoken)
       commit('SET_AUTHENTICATED',true)
     }
@@ -70,8 +70,11 @@ export const actions = {
     return resp;
   },
    // eslint-disable-next-line no-empty-pattern
-   async registerUser({}, data) {
+  async registerUser({}, data) {
     let resp = await axios.post('/api/register-user', data)
     return resp;
+  },
+  async setUserData({commit}, data) {
+    commit('SET_USER',data)
   },
 }

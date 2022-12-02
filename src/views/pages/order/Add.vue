@@ -38,6 +38,7 @@ export default {
         notes: null,
         is_send_email: true,
         is_personal_note: true,
+        add_to_profile: false,
         attachment: null,
       },
       selectedService: null,
@@ -335,7 +336,7 @@ export default {
     getDate(date) {
       return moment(date).format("MM/DD/YY");
     },
-    onAttechmentChange(e) {
+    onAttachmentChange(e) {
       const file = e.target.files[0];
       if (file) {
         this.comment.attachment = file;
@@ -348,6 +349,7 @@ export default {
         notes: null,
         is_send_email: true,
         is_personal_note: true,
+        add_to_profile: false,
         attachment: null,
       };
       this.v$.comment.$reset();
@@ -363,6 +365,7 @@ export default {
       formdata.append("notes", this.comment.notes);
       formdata.append("is_send_email", this.comment.is_send_email);
       formdata.append("is_personal_note", this.comment.is_personal_note);
+      formdata.append("add_to_profile", this.comment.add_to_profile);
       formdata.append("attachment", this.comment.attachment);
       this.addOrderComment(formdata)
         .then((res) => {
@@ -572,7 +575,7 @@ export default {
           <!-- end card header -->
           <div class="card-body">
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-6 px-5">
                 <h3 class="mb-4">Order Detail</h3>
                 <div class="row mb-4">
                   <div class="col-lg-3">
@@ -848,7 +851,7 @@ export default {
                   </button>
                 </div>
               </div>
-              <div class="col-md-6" v-if="(!isServiceOrder && (isAdmin || isEdit))">
+              <div class="col-md-6 px-5" v-if="(!isServiceOrder && (isAdmin || isEdit))">
                 <div
                   class="document"
                   v-if="
@@ -935,7 +938,7 @@ export default {
                         type="file"
                         class="form-control"
                         id="attchment"
-                        @change="onAttechmentChange($event)"
+                        @change="onAttachmentChange($event)"
                       />
                     </div>
                   </div>
@@ -956,6 +959,19 @@ export default {
                     </div>
                   </div>
                   <div class="d-flex justify-content-end mt-3">
+                    <div class="form-check mt-2 me-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value=""
+                        id="add-to-profile-checkbox"
+                        v-model="comment.add_to_profile"
+                      />
+                      <label class="form-check-label" for="add-to-profile-checkbox"
+                        >Add To Profile</label
+                      >
+                    </div>
+
                     <div class="form-check mt-2 me-3">
                       <input
                         class="form-check-input"

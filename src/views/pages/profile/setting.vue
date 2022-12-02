@@ -1,13 +1,24 @@
 <script>
-  import Multiselect from "@vueform/multiselect";
-  import "@vueform/multiselect/themes/default.css";
-  import flatPickr from "vue-flatpickr-component";
-  import "flatpickr/dist/flatpickr.css";
+
 
   import Layout from "../../../layouts/main.vue";
   import appConfig from "../../../../app.config";
+  import { mapActions, mapGetters, mapState } from 'vuex';
+  import Multiselect from "@vueform/multiselect";
+import "@vueform/multiselect/themes/default.css";
+  import moment from "moment";
+  import {
+  required,
+  email,
+  helpers,
+  numeric
+} from "@vuelidate/validators";
+import useVuelidate from "@vuelidate/core";
 
   export default {
+    setup() {
+      return { v$: useVuelidate() };
+    },
     page: {
       title: "Setting",
       meta: [{
@@ -29,12 +40,172 @@
         ],
         value: ["javascript"],
         date: null,
+        assetUrl: process.env.VUE_APP_ENVIRONMENT != 'local' ? process.env.VUE_APP_API_URL : process.env.VUE_APP_LOCAL_URL,
+        isSubmited:false,
+        loader:false,
+        disabled:false,
+        user:{
+          name:"",
+          email:"",
+          phone:"",
+          language:"english",
+          visible_password:"",
+          role_id:3,
+          business_name:"",
+          business_type:"",
+          bank_account:"",
+          address:"",
+          city:"",
+          state:"",
+          zip:"",
+          country:"india",
+        }
       };
     },
+     computed: {
+      ...mapGetters({
+        getProfileAttachments: "profile/getProfileAttachments",
+      }),
+      ...mapState('auth', {
+        userData: state => state.user,
+      }),
+      profileType(){
+        if(this.userData.role_id ==1){
+          return 'Super Admin'
+        }else if(this.userData.role_id ==2){
+          return 'Team'
+        }else if(this.userData.role_id ==3){
+          return 'User'
+        }
+        return null;
+      }
+    },
+    validations: {
+      user:{
+        name: {
+          required: helpers.withMessage("Name is required", required),
+        },
+        email: {
+          required: helpers.withMessage("Email is required", required),
+          email: helpers.withMessage("Please enter valid email", email),
+        },
+        phone: {
+          required: helpers.withMessage("Phone is required", required),
+          numeric: helpers.withMessage("Please enter only numbers", numeric),
+        },
+        language: {
+          required: helpers.withMessage("Language is required", required),
+        },
+        visible_password: {
+          required: helpers.withMessage("Password is required", required),
+        },
+        role_id: {
+          required: helpers.withMessage("Role is required", required),
+        },
+        // business_name: {
+        //   required: helpers.withMessage("Business Name is required", required),
+        // },
+        country: {
+          required: helpers.withMessage("Country is required", required),
+        },
+    }
+  },
+    created(){
+      this.setProfileAttachments()
+      this.setUsersData()
+    },
+    methods: {
+      ...mapActions({
+        setProfileAttachments: "profile/setProfileAttachments",
+        updateUserDb:'users/updateUser',
+        setUserData:'auth/setUserData',
+      }),
+      getDate(date) {
+        return moment(date).format("MM/DD/YY");
+      },
+      setUsersData(){
+        console.log('userData',this.userData)
+         this.user = {
+          id: this.userData.id,
+          name: this.userData.name,
+          email: this.userData.email,
+          phone: this.userData.phone,
+          language: this.userData.language,
+          visible_password: this.userData.visible_password,
+          role_id: this.userData.role_id,
+          business_name: this.userData.user_businesses && this.userData.user_businesses.business_name ? this.userData.user_businesses.business_name : null,
+          business_type: this.userData.user_businesses && this.userData.user_businesses.business_type ? this.userData.user_businesses.business_type : null,
+          bank_account: this.userData.user_businesses && this.userData.user_businesses.bank_account ? this.userData.user_businesses.bank_account : null,
+          address: this.userData.user_businesses && this.userData.user_businesses.address ? this.userData.user_businesses.address : null,
+          city: this.userData.user_businesses && this.userData.user_businesses.city ? this.userData.user_businesses.city : null,
+          state: this.userData.user_businesses && this.userData.user_businesses.state ? this.userData.user_businesses.state : null,
+          zip: this.userData.user_businesses && this.userData.user_businesses.zip ? this.userData.user_businesses.zip : null,
+          country: this.userData.user_businesses && this.userData.user_businesses.country ? this.userData.user_businesses.country : null,
+        }
+      },
+      updateUser(){
+        this.isSubmited = true;
+        this.v$.user.$touch();
+        if (this.v$.user.$invalid) {
+          return;
+        } 
+        this.loader=true
+        this.disabled=true
+        this.updateUserDb(this.user).then((res)=>{
+          this.loader=false
+          this.disabled=false
+          if(res.data.status){
+            var userDb = res.data.data
+            console.log('users',userDb)
+            this.setUserData(userDb)
+            this.$toast.open({
+              message: "User updated.",
+              type: "success",
+            })
+          }else{
+            // let message=res.data.message
+            // this.$toast.open({
+            //     message: message,
+            //     type: "error",
+            //   })
+          }
+        }).catch((error)=>{
+          this.loader=false
+          this.disabled=false
+          if(error.response && error.response.status == 422 && error.response.data && error.response.data.data.email){
+            this.$toast.open({
+                message: 'The email has already been taken.',
+                type: "error",
+              }) 
+          }else if(error.response && error.response.status == 422 && error.response.data && error.response.data.data.phone){
+            this.$toast.open({
+                message: 'The phone has already been taken.',
+                type: "error",
+              }) 
+          }else{
+              this.$toast.open({
+                message: 'Server Error',
+                type: "error",
+              })  
+          }
+        })
+      },
+      nameInitials(name){
+          var nameArray = name.split(" ");
+          var initials = '';
+          if(nameArray.length === 1) {
+              return nameArray[0].charAt(0) + "" +nameArray[0].charAt(1);
+          }else{
+              initials = nameArray[0].charAt(0);
+          }
+          for (var i = (nameArray.length - 1); i < nameArray.length; i++){
+              initials += nameArray[i].charAt(0);
+          }
+          return initials.toUpperCase();
+      },
+    },
     components: {
-      Layout,
-      Multiselect,
-      flatPickr,
+      Layout,Multiselect
     },
   };
 </script>
@@ -70,93 +241,17 @@
                   mx-auto
                   mb-4
                 ">
-                <img src="@/assets/images/users/avatar-1.jpg" class="
-                    rounded-circle
-                    avatar-xl
-                    img-thumbnail
-                    user-profile-image
-                  " alt="user-profile-image" />
-                <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
-                  <input id="profile-img-file-input" type="file" class="profile-img-file-input" />
-                  <label for="profile-img-file-input" class="profile-photo-edit avatar-xs">
-                    <span class="avatar-title rounded-circle bg-light text-body">
-                      <i class="ri-camera-fill"></i>
-                    </span>
-                  </label>
+                <div class="avatar-xl mt-3">
+                    <div class="avatar-title rounded-circle bg-soft-danger text-danger fs-22">
+                        {{nameInitials(userData.name)}}
+                    </div>
                 </div>
               </div>
-              <h5 class="fs-16 mb-1">Anna Adame</h5>
-              <p class="text-muted mb-0">Lead Designer / Developer</p>
+              <h5 class="fs-16 mb-1">{{userData.name}}</h5>
+              <p class="text-muted mb-0">{{profileType}}</p>
             </div>
           </div>
         </div>
-        <!--end card-->
-        <div class="card">
-          <div class="card-body">
-            <div class="d-flex align-items-center mb-5">
-              <div class="flex-grow-1">
-                <h5 class="card-title mb-0">Complete Your Profile</h5>
-              </div>
-              <div class="flex-shrink-0">
-                <a href="javascript:void(0);" class="badge bg-light text-primary fs-12"><i
-                    class="ri-edit-box-line align-bottom me-1"></i> Edit</a>
-              </div>
-            </div>
-            <div class="progress animated-progess custom-progress progress-label">
-              <div class="progress-bar bg-danger" role="progressbar" style="width: 30%" aria-valuenow="30"
-                aria-valuemin="0" aria-valuemax="100">
-                <div class="label">30%</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="d-flex align-items-center mb-4">
-              <div class="flex-grow-1">
-                <h5 class="card-title mb-0">Portfolio</h5>
-              </div>
-              <div class="flex-shrink-0">
-                <a href="javascript:void(0);" class="badge bg-light text-primary fs-12"><i
-                    class="ri-add-fill align-bottom me-1"></i> Add</a>
-              </div>
-            </div>
-            <div class="mb-3 d-flex">
-              <div class="avatar-xs d-block flex-shrink-0 me-3">
-                <span class="avatar-title rounded-circle fs-16 bg-dark text-light">
-                  <i class="ri-github-fill"></i>
-                </span>
-              </div>
-              <input type="email" class="form-control" id="gitUsername" placeholder="Username" value="@daveadame" />
-            </div>
-            <div class="mb-3 d-flex">
-              <div class="avatar-xs d-block flex-shrink-0 me-3">
-                <span class="avatar-title rounded-circle fs-16 bg-primary">
-                  <i class="ri-global-fill"></i>
-                </span>
-              </div>
-              <input type="text" class="form-control" id="websiteInput" placeholder="www.example.com"
-                value="www.velzon.com" />
-            </div>
-            <div class="mb-3 d-flex">
-              <div class="avatar-xs d-block flex-shrink-0 me-3">
-                <span class="avatar-title rounded-circle fs-16 bg-success">
-                  <i class="ri-dribbble-fill"></i>
-                </span>
-              </div>
-              <input type="text" class="form-control" id="dribbleName" placeholder="Username" value="@dave_adame" />
-            </div>
-            <div class="d-flex">
-              <div class="avatar-xs d-block flex-shrink-0 me-3">
-                <span class="avatar-title rounded-circle fs-16 bg-danger">
-                  <i class="ri-pinterest-fill"></i>
-                </span>
-              </div>
-              <input type="text" class="form-control" id="pinterestName" placeholder="Username" value="Advance Dave" />
-            </div>
-          </div>
-        </div>
-        <!--end card-->
       </div>
       <!--end col-->
       <div class="col-xxl-9">
@@ -174,22 +269,16 @@
                   Personal Details
                 </a>
               </li>
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a class="nav-link text-body" data-bs-toggle="tab" href="#changePassword" role="tab">
                   <i class="far fa-user"></i>
                   Change Password
                 </a>
-              </li>
+              </li> -->
               <li class="nav-item">
-                <a class="nav-link text-body" data-bs-toggle="tab" href="#experience" role="tab">
+                <a class="nav-link text-body" data-bs-toggle="tab" href="#download" role="tab">
                   <i class="far fa-envelope"></i>
-                  Experience
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link text-body" data-bs-toggle="tab" href="#privacy" role="tab">
-                  <i class="far fa-envelope"></i>
-                  Privacy Policy
+                  Download
                 </a>
               </li>
             </ul>
@@ -197,126 +286,325 @@
           <div class="card-body p-4">
             <div class="tab-content">
               <div class="tab-pane active" id="personalDetails" role="tabpanel">
-                <form action="javascript:void(0);">
+                  <div class="card-body">
                   <div class="row">
-                    <div class="col-lg-6">
-                      <div class="mb-3">
-                        <label for="firstnameInput" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="firstnameInput" placeholder="Enter your firstname"
-                          value="Dave" />
+                    <div class="col-6">
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="nameInput" class="form-label">Name</label>
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="nameInput"
+                            placeholder="Enter your name"
+                            v-model="user.name"
+                            :class="{
+                              'is-invalid': isSubmited && v$.user.name.$error,
+                            }"
+                          />
+                            <div
+                                v-for="(item, index) in v$.user.name.$errors"
+                                :key="index"
+                                class="invalid-feedback"
+                              >
+                                <span v-if="item.$message">{{ item.$message }}</span>
+                            </div>
+                        </div>
                       </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-6">
-                      <div class="mb-3">
-                        <label for="lastnameInput" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="lastnameInput" placeholder="Enter your lastname"
-                          value="Adame" />
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="leaveemails" class="form-label">Email</label>
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="email"
+                            class="form-control"
+                            id="leaveemails"
+                            placeholder="Enter your email"
+                            v-model="user.email"
+                            :class="{
+                              'is-invalid': isSubmited && v$.user.email.$error,
+                            }"
+                          />
+                            <div
+                                v-for="(item, index) in v$.user.email.$errors"
+                                :key="index"
+                                class="invalid-feedback"
+                              >
+                                <span v-if="item.$message">{{ item.$message }}</span>
+                            </div>
+                        </div>
                       </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-6">
-                      <div class="mb-3">
-                        <label for="phonenumberInput" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="phonenumberInput"
-                          placeholder="Enter your phone number" value="+(1) 987 6543" />
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="phone" class="form-label">Phone</label>
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="phone"
+                            placeholder="Enter your phone"
+                            v-model="user.phone"
+                            :class="{
+                              'is-invalid': isSubmited && v$.user.phone.$error,
+                            }"
+                          />
+                            <div
+                                v-for="(item, index) in v$.user.phone.$errors"
+                                :key="index"
+                                class="invalid-feedback"
+                              >
+                                <span v-if="item.$message">{{ item.$message }}</span>
+                            </div>
+                        </div>
                       </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-6">
-                      <div class="mb-3">
-                        <label for="emailInput" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="emailInput" placeholder="Enter your email"
-                          value="daveadame@velzon.com" />
-                      </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-12">
-                      <div class="mb-3">
-                        <label for="JoiningdatInput" class="form-label">Joining Date</label>
 
-                        <flat-pickr v-model="date" class="form-control"></flat-pickr>
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="phone" class="form-label">Language</label>
+                        </div>
+                        <div class="col-lg-9">
+                          <div class="mt-4 mt-lg-0">
+                            <div class="form-check form-check-inline">
+                              <input
+                                class="form-check-input"
+                                type="radio"
+                                name="inlineRadioOptions1"
+                                id="lang-english"
+                                value="english"
+                                v-model="user.language"
+                                :class="{
+                                  'is-invalid': isSubmited && v$.user.language.$error,
+                                }"
+                              />
+                              <label class="form-check-label" for="lang-english"
+                                >English</label
+                              >
+                            </div>
+                            <div class="form-check form-check-inline">
+                              <input
+                                class="form-check-input"
+                                type="radio"
+                                name="inlineRadioOptions2"
+                                id="lang-arabic"
+                                value="arabic"
+                                v-model="user.language"
+                                :class="{
+                                  'is-invalid': isSubmited && v$.user.language.$error,
+                                }"
+                              />
+                              <label class="form-check-label" for="lang-arabic"
+                                >Arabic</label
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="password" class="form-label">Password</label>
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="password"
+                            placeholder="Enter your Password"
+                            v-model="user.visible_password"
+                            :class="{
+                                'is-invalid': isSubmited && v$.user.visible_password.$error,
+                              }"
+                            />
+                            <div
+                                v-for="(item, index) in v$.user.visible_password.$errors"
+                                :key="index"
+                                class="invalid-feedback"
+                              >
+                                <span v-if="item.$message">{{ item.$message }}</span>
+                            </div>
+                        </div>
+                      </div>
+
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="business_name" class="form-label"
+                            >Business Name</label
+                          >
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="business_name"
+                            placeholder="Enter Business Name"
+                            v-model="user.business_name"
+                          />
+                        </div>
+                      </div>
+                      <div class="row mb-4">
+                          <div class="col-lg-3">
+                            <label for="phone" class="form-label">Business Type</label>
+                          </div>
+                          <div class="col-lg-9">
+                            <div class="mt-4 mt-lg-0">
+                              <div class="form-check form-check-inline">
+                                <input
+                                  class="form-check-input"
+                                  type="radio"
+                                  name="business_type"
+                                  id="private-limited"
+                                  value="private-limited"
+                                  v-model="user.business_type"
+                                />
+                                <label class="form-check-label" for="private-limited"
+                                  >Private Limited</label
+                                >
+                              </div>
+                              <div class="form-check form-check-inline">
+                                <input
+                                  class="form-check-input"
+                                  type="radio"
+                                  name="business_type"
+                                  id="public-limited"
+                                  value="public-limited"
+                                  v-model="user.business_type"
+                                />
+                                <label class="form-check-label" for="public-limited"
+                                  >Public Limited</label
+                                >
+                              </div>
+                              <div class="form-check form-check-inline">
+                                <input
+                                  class="form-check-input"
+                                  type="radio"
+                                  name="business_type"
+                                  id="propertiership"
+                                  value="propertiership"
+                                  v-model="user.business_type"
+                                />
+                                <label class="form-check-label" for="propertiership"
+                                  >Propertiership</label
+                                >
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="bank_account" class="form-label">Bank Account</label>
+                        </div>
+                        <div class="col-lg-9">
+                          <textarea class="form-control" id="bank_account" rows="3" placeholder="Enter your Bank Account" v-model="user.bank_account"></textarea>
+                        </div>
                       </div>
                     </div>
-                    <!--end col-->
-                    <div class="col-lg-12">
-                      <div class="mb-3">
-                        <label for="skillsInput" class="form-label">Skills</label>
-                        <Multiselect v-model="value" mode="tags" :close-on-select="false" :searchable="true"
-                          :create-option="true" :options="[
-                            { value: 'illustrator', label: 'Illustrator' },
-                            { value: 'photoshop', label: 'Photoshop' },
-                            { value: 'css', label: 'CSS' },
-                            { value: 'html', label: 'HTML' },
-                            { value: 'javascript', label: 'Javascript' },
-                            { value: 'python', label: 'Python' },
-                            { value: 'php', label: 'PHP' },
-                          ]" />
+
+                    <div class="col-6">
+                    
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="address" class="form-label">Address</label>
+                        </div>
+                        <div class="col-lg-9">
+                          <textarea class="form-control" id="address" rows="3" placeholder="Enter your address" v-model="user.address"></textarea>
+                        </div>
+                      </div>
+
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="city" class="form-label"
+                            >City</label
+                          >
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="city"
+                            placeholder="Enter City"
+                            v-model="user.city"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="state" class="form-label"
+                            >State</label
+                          >
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="state"
+                            placeholder="Enter State"
+                            v-model="user.state"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="zipcode" class="form-label"
+                            >Zip</label
+                          >
+                        </div>
+                        <div class="col-lg-9">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="zipcode"
+                            placeholder="Enter Zip"
+                            v-model="user.zip"
+                          />
+                        </div>
+                      </div>
+                      <div class="row mb-4">
+                        <div class="col-lg-3">
+                          <label for="country" class="form-label"
+                            >Country</label
+                          >
+                        </div>
+                        <div class="col-lg-9">
+                          <Multiselect
+                            v-model="user.country"
+                            :class="{
+                            'is-invalid': isSubmited && v$.user.country.$error,
+                            }"
+                            :close-on-select="true"
+                            :create-option="true"
+                            :clearable="false"
+                            :searchable="true"
+                            :options="[
+                              { value: 'india', label: 'India' },
+                              { value: 'uae', label: 'UAE' },
+                            ]"
+                          />
+                          <div
+                                v-for="(item, index) in v$.user.country.$errors"
+                                :key="index"
+                                class="invalid-feedback"
+                              >
+                                <span v-if="item.$message">{{ item.$message }}</span>
+                            </div>
+                        </div>
                       </div>
                     </div>
-                    <!--end col-->
-                    <div class="col-lg-6">
-                      <div class="mb-3">
-                        <label for="designationInput" class="form-label">Designation</label>
-                        <input type="text" class="form-control" id="designationInput" placeholder="Designation"
-                          value="Lead Designer / Developer" />
-                      </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-6">
-                      <div class="mb-3">
-                        <label for="websiteInput1" class="form-label">Website</label>
-                        <input type="text" class="form-control" id="websiteInput1" placeholder="www.example.com"
-                          value="www.velzon.com" />
-                      </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="cityInput" class="form-label">City</label>
-                        <input type="text" class="form-control" id="cityInput" placeholder="City" value="California" />
-                      </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="countryInput" class="form-label">Country</label>
-                        <input type="text" class="form-control" id="countryInput" placeholder="Country"
-                          value="United States" />
-                      </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-4">
-                      <div class="mb-3">
-                        <label for="zipcodeInput" class="form-label">Zip Code</label>
-                        <input type="text" class="form-control" minlength="5" maxlength="6" id="zipcodeInput"
-                          placeholder="Enter zipcode" value="90011" />
-                      </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-12">
-                      <div class="mb-3 pb-2">
-                        <label for="exampleFormControlTextarea" class="form-label">Description</label>
-                        <textarea class="form-control" id="exampleFormControlTextarea"
-                          placeholder="Enter your description" rows="3">
-Hi I'm Anna Adame,It will be as simple as Occidental; in fact, it will be Occidental. To an English person, it will seem like simplified English, as a skeptical Cambridge friend of mine told me what Occidental is European languages are members of the same family.</textarea>
-                      </div>
-                    </div>
-                    <!--end col-->
-                    <div class="col-lg-12">
-                      <div class="hstack gap-2 justify-content-end">
-                        <button type="submit" class="btn btn-primary">
-                          Updates
-                        </button>
-                        <button type="button" class="btn btn-soft-success">
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                    <!--end col-->
                   </div>
-                  <!--end row-->
-                </form>
+                  <div class="text-end float-end">
+                      <button class="btn btn-primary align-items-center d-flex justify-content-center" :disabled="disabled" @click="updateUser">
+                        Update User
+                        <div class="spinner-border loader-setup" role="status" v-if="loader">
+                            <span class="sr-only">Loading...</span>
+                          </div>
+                      </button>
+                  </div>
+                </div>
               </div>
               <!--end tab-pane-->
               <div class="tab-pane" id="changePassword" role="tabpanel">
@@ -346,12 +634,12 @@ Hi I'm Anna Adame,It will be as simple as Occidental; in fact, it will be Occide
                       </div>
                     </div>
                     <!--end col-->
-                    <div class="col-lg-12">
+                    <!-- <div class="col-lg-12">
                       <div class="mb-3">
                         <a href="javascript:void(0);" class="link-primary text-decoration-underline">Forgot Password
                           ?</a>
                       </div>
-                    </div>
+                    </div> -->
                     <!--end col-->
                     <div class="col-lg-12">
                       <div class="text-end">
@@ -364,349 +652,42 @@ Hi I'm Anna Adame,It will be as simple as Occidental; in fact, it will be Occide
                   </div>
                   <!--end row-->
                 </form>
-                <div class="mt-4 mb-3 border-bottom pb-2">
-                  <div class="float-end">
-                    <a href="javascript:void(0);" class="link-primary">All Logout</a>
-                  </div>
-                  <h5 class="card-title">Login History</h5>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                  <div class="flex-shrink-0 avatar-sm">
-                    <div class="avatar-title bg-light text-primary rounded-3 fs-18">
-                      <i class="ri-smartphone-line"></i>
-                    </div>
-                  </div>
-                  <div class="flex-grow-1 ms-3">
-                    <h6>iPhone 12 Pro</h6>
-                    <p class="text-muted mb-0">
-                      Los Angeles, United States - March 16 at 2:47PM
-                    </p>
-                  </div>
-                  <div>
-                    <a href="javascript:void(0);">Logout</a>
-                  </div>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                  <div class="flex-shrink-0 avatar-sm">
-                    <div class="avatar-title bg-light text-primary rounded-3 fs-18">
-                      <i class="ri-tablet-line"></i>
-                    </div>
-                  </div>
-                  <div class="flex-grow-1 ms-3">
-                    <h6>Apple iPad Pro</h6>
-                    <p class="text-muted mb-0">
-                      Washington, United States - November 06 at 10:43AM
-                    </p>
-                  </div>
-                  <div>
-                    <a href="javascript:void(0);">Logout</a>
-                  </div>
-                </div>
-                <div class="d-flex align-items-center mb-3">
-                  <div class="flex-shrink-0 avatar-sm">
-                    <div class="avatar-title bg-light text-primary rounded-3 fs-18">
-                      <i class="ri-smartphone-line"></i>
-                    </div>
-                  </div>
-                  <div class="flex-grow-1 ms-3">
-                    <h6>Galaxy S21 Ultra 5G</h6>
-                    <p class="text-muted mb-0">
-                      Conneticut, United States - June 12 at 3:24PM
-                    </p>
-                  </div>
-                  <div>
-                    <a href="javascript:void(0);">Logout</a>
-                  </div>
-                </div>
-                <div class="d-flex align-items-center">
-                  <div class="flex-shrink-0 avatar-sm">
-                    <div class="avatar-title bg-light text-primary rounded-3 fs-18">
-                      <i class="ri-macbook-line"></i>
-                    </div>
-                  </div>
-                  <div class="flex-grow-1 ms-3">
-                    <h6>Dell Inspiron 14</h6>
-                    <p class="text-muted mb-0">
-                      Phoenix, United States - July 26 at 8:10AM
-                    </p>
-                  </div>
-                  <div>
-                    <a href="javascript:void(0);">Logout</a>
-                  </div>
-                </div>
               </div>
               <!--end tab-pane-->
-              <div class="tab-pane" id="experience" role="tabpanel">
-                <form>
-                  <div id="newlink">
-                    <div id="1">
-                      <div class="row">
-                        <div class="col-lg-12">
-                          <div class="mb-3">
-                            <label for="jobTitle" class="form-label">Job Title</label>
-                            <input type="text" class="form-control" id="jobTitle" placeholder="Job title"
-                              value="Lead Designer / Developer" />
-                          </div>
-                        </div>
-                        <!--end col-->
-                        <div class="col-lg-6">
-                          <div class="mb-3">
-                            <label for="companyName" class="form-label">Company Name</label>
-                            <input type="text" class="form-control" id="companyName" placeholder="Company name"
-                              value="Themesbrand" />
-                          </div>
-                        </div>
-                        <!--end col-->
-                        <div class="col-lg-6">
-                          <div class="mb-3">
-                            <label for="experienceYear" class="form-label">Experience Years</label>
-                            <div class="row">
-                              <div class="col-lg-5">
-                                <Multiselect class="form-control" v-model="value2" :close-on-select="true"
-                                  :searchable="true" :create-option="true" :options="[
-                                    { value: '', label: 'Select years' },
-                                    { value: 'Choice 1', label: '2001' },
-                                    { value: 'Choice 2', label: '2002' },
-                                    { value: 'Choice 3', label: '2003' },
-                                    { value: 'Choice 4', label: '2004' },
-                                    { value: 'Choice 5', label: '2005' },
-                                    { value: 'Choice 6', label: '2006' },
-                                    { value: 'Choice 7', label: '2007' },
-                                    { value: 'Choice 8', label: '2008' },
-                                    { value: 'Choice 9', label: '2009' },
-                                    { value: 'Choice 10', label: '2010' },
-                                    { value: 'Choice 11', label: '2011' },
-                                    { value: 'Choice 12', label: '2012' },
-                                    { value: 'Choice 13', label: '2013' },
-                                    { value: 'Choice 14', label: '2014' },
-                                    { value: 'Choice 15', label: '2015' },
-                                    { value: 'Choice 16', label: '2016' },
-                                    { value: 'Choice 17', label: '2017' },
-                                    { value: 'Choice 18', label: '2018' },
-                                    { value: 'Choice 19', label: '2019' },
-                                    { value: 'Choice 20', label: '2020' },
-                                    { value: 'Choice 21', label: '2021' },
-                                    { value: 'Choice 22', label: '2022' },
-                                  ]" />
-                              </div>
-                              <!--end col-->
-                              <div class="col-auto align-self-center">to</div>
-                              <!--end col-->
-                              <div class="col-lg-5">
-                                <Multiselect class="form-control" v-model="value1" :close-on-select="true"
-                                  :searchable="true" :create-option="true" :options="[
-                                    { value: '', label: 'Select years' },
-                                    { value: 'Choice 1', label: '2001' },
-                                    { value: 'Choice 2', label: '2002' },
-                                    { value: 'Choice 3', label: '2003' },
-                                    { value: 'Choice 4', label: '2004' },
-                                    { value: 'Choice 5', label: '2005' },
-                                    { value: 'Choice 6', label: '2006' },
-                                    { value: 'Choice 7', label: '2007' },
-                                    { value: 'Choice 8', label: '2008' },
-                                    { value: 'Choice 9', label: '2009' },
-                                    { value: 'Choice 10', label: '2010' },
-                                    { value: 'Choice 11', label: '2011' },
-                                    { value: 'Choice 12', label: '2012' },
-                                    { value: 'Choice 13', label: '2013' },
-                                    { value: 'Choice 14', label: '2014' },
-                                    { value: 'Choice 15', label: '2015' },
-                                    { value: 'Choice 16', label: '2016' },
-                                    { value: 'Choice 17', label: '2017' },
-                                    { value: 'Choice 18', label: '2018' },
-                                    { value: 'Choice 19', label: '2019' },
-                                    { value: 'Choice 20', label: '2020' },
-                                    { value: 'Choice 21', label: '2021' },
-                                    { value: 'Choice 22', label: '2022' },
-                                  ]" />
-                              </div>
-                              <!--end col-->
-                            </div>
-                            <!--end row-->
-                          </div>
-                        </div>
-                        <!--end col-->
-                        <div class="col-lg-12">
-                          <div class="mb-3">
-                            <label for="jobDescription" class="form-label">Job Description</label>
-                            <textarea class="form-control" id="jobDescription" rows="3" placeholder="Enter description">
-You always want to make sure that your fonts work well together and try to limit the number of fonts you use to three or less. Experiment and play around with the fonts that you already have in the software you're working with reputable font websites. </textarea>
-                          </div>
-                        </div>
-                        <!--end col-->
-                        <div class="hstack gap-2 justify-content-end">
-                          <a class="btn btn-success" href="javascript:void(0);">Delete</a>
-                        </div>
+              <div class="tab-pane" id="download" role="tabpanel">
+                  <div class="history" v-if="getProfileAttachments.length > 0">
+                    <!-- <h3 class="mb-2">Attachment History</h3> -->
+                    <div class="card-body px-0">
+                      <div class="table-responsive table-bordered">
+                        <table class="table align-middle table-nowrap mb-0">
+                          <thead>
+                            <tr>
+                              <th scope="col">Date</th>
+                              <th scope="col">Comment</th>
+                              <th scope="col">Attachment</th>
+                              <th scope="col">Send Email</th>
+                              <th scope="col">Personal Note</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr
+                              v-for="(attachment, index) in getProfileAttachments"
+                              :key="index"
+                            >
+                              <td>{{ getDate(attachment.created_at) }}</td>
+                              <td>{{ attachment.notes }}</td>
+                              <td>
+                                <a v-if="attachment.attachment" :href="`${assetUrl}/storage/${attachment.attachment}`" download="" target="_blank">Download</a>
+                                <span v-else>--</span>
+                              </td>
+                              <td>{{attachment.is_send_email ? 'Yes' : 'No'}}</td>
+                              <td>{{attachment.is_personal_note ? 'Yes' : 'No'}}</td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
-                      <!--end row-->
                     </div>
                   </div>
-                  <div id="newForm" style="display: none"></div>
-                  <div class="col-lg-12">
-                    <div class="hstack gap-2">
-                      <button type="button" class="btn btn-success">
-                        Update
-                      </button>
-                      <a href="javascript:void(0);" class="btn btn-primary">Add New</a>
-                    </div>
-                  </div>
-                  <!--end col-->
-                </form>
-              </div>
-              <!--end tab-pane-->
-              <div class="tab-pane" id="privacy" role="tabpanel">
-                <div class="mb-4 pb-2">
-                  <h5 class="card-title text-decoration-underline mb-3">
-                    Security:
-                  </h5>
-                  <div class="d-flex flex-column flex-sm-row mb-4 mb-sm-0">
-                    <div class="flex-grow-1">
-                      <h6 class="fs-14 mb-1">Two-factor Authentication</h6>
-                      <p class="text-muted">
-                        Two-factor authentication is an enhanced security
-                        meansur. Once enabled, you'll be required to give two
-                        types of identification when you log into Google
-                        Authentication and SMS are Supported.
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0 ms-sm-3">
-                      <a href="javascript:void(0);" class="btn btn-sm btn-primary">Enable Two-facor Authentication</a>
-                    </div>
-                  </div>
-                  <div class="d-flex flex-column flex-sm-row mb-4 mb-sm-0 mt-2">
-                    <div class="flex-grow-1">
-                      <h6 class="fs-14 mb-1">Secondary Verification</h6>
-                      <p class="text-muted">
-                        The first factor is a password and the second commonly
-                        includes a text with a code sent to your smartphone, or
-                        biometrics using your fingerprint, face, or retina.
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0 ms-sm-3">
-                      <a href="javascript:void(0);" class="btn btn-sm btn-primary">Set up secondary method</a>
-                    </div>
-                  </div>
-                  <div class="d-flex flex-column flex-sm-row mb-4 mb-sm-0 mt-2">
-                    <div class="flex-grow-1">
-                      <h6 class="fs-14 mb-1">Backup Codes</h6>
-                      <p class="text-muted mb-sm-0">
-                        A backup code is automatically generated for you when
-                        you turn on two-factor authentication through your iOS
-                        or Android Twitter app. You can also generate a backup
-                        code on twitter.com.
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0 ms-sm-3">
-                      <a href="javascript:void(0);" class="btn btn-sm btn-primary">Generate backup codes</a>
-                    </div>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <h5 class="card-title text-decoration-underline mb-3">
-                    Application Notifications:
-                  </h5>
-                  <ul class="list-unstyled mb-0">
-                    <li class="d-flex">
-                      <div class="flex-grow-1">
-                        <label for="directMessage" class="form-check-label fs-14">Direct messages</label>
-                        <p class="text-muted">
-                          Messages from people you follow
-                        </p>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" role="switch" id="directMessage" checked />
-                        </div>
-                      </div>
-                    </li>
-                    <li class="d-flex mt-2">
-                      <div class="flex-grow-1">
-                        <label class="form-check-label fs-14" for="desktopNotification">
-                          Show desktop notifications
-                        </label>
-                        <p class="text-muted">
-                          Choose the option you want as your default setting.
-                          Block a site: Next to "Not allowed to send
-                          notifications," click Add.
-                        </p>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" role="switch" id="desktopNotification"
-                            checked />
-                        </div>
-                      </div>
-                    </li>
-                    <li class="d-flex mt-2">
-                      <div class="flex-grow-1">
-                        <label class="form-check-label fs-14" for="emailNotification">
-                          Show email notifications
-                        </label>
-                        <p class="text-muted">
-                          Under Settings, choose Notifications. Under Select an
-                          account, choose the account to enable notifications
-                          for.
-                        </p>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" role="switch" id="emailNotification" />
-                        </div>
-                      </div>
-                    </li>
-                    <li class="d-flex mt-2">
-                      <div class="flex-grow-1">
-                        <label class="form-check-label fs-14" for="chatNotification">
-                          Show chat notifications
-                        </label>
-                        <p class="text-muted">
-                          To prevent duplicate mobile notifications from the
-                          Gmail and Chat apps, in settings, turn off Chat
-                          notifications.
-                        </p>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" role="switch" id="chatNotification" />
-                        </div>
-                      </div>
-                    </li>
-                    <li class="d-flex mt-2">
-                      <div class="flex-grow-1">
-                        <label class="form-check-label fs-14" for="purchaesNotification">
-                          Show purchase notifications
-                        </label>
-                        <p class="text-muted">
-                          Get real-time purchase alerts to protect yourself from
-                          fraudulent charges.
-                        </p>
-                      </div>
-                      <div class="flex-shrink-0">
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" role="switch" id="purchaesNotification" />
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h5 class="card-title text-decoration-underline mb-3">
-                    Delete This Account:
-                  </h5>
-                  <p class="text-muted">
-                    Go to the Data & Privacy section of your profile Account.
-                    Scroll to "Your data & privacy options." Delete your Profile
-                    Account. Follow the instructions to delete your account :
-                  </p>
-                  <div>
-                    <input type="password" class="form-control" id="passwordInput" placeholder="Enter your password"
-                      value="make@321654987" style="max-width: 265px" />
-                  </div>
-                  <div class="hstack gap-2 mt-3">
-                    <a href="javascript:void(0);" class="btn btn-soft-danger">Close & Delete This Account</a>
-                    <a href="javascript:void(0);" class="btn btn-light">Cancel</a>
-                  </div>
-                </div>
               </div>
               <!--end tab-pane-->
             </div>
