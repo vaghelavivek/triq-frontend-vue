@@ -19,10 +19,46 @@ export default [
   },
   {
     path: "/forgot-password",
-    name: "Forgot password",
+    name: "ForgotPassword",
     component: () => import("../views/account/forgot-password.vue"),
     meta: {
       title: "Forgot Password",
+      beforeResolve(routeTo, routeFrom, next) {
+        // If the user is already logged in
+        if (store.getters["auth/loggedIn"]) {
+          // Redirect to the home page instead
+          next({ name: "default" });
+        } else {
+          // Continue to the login page
+          next();
+        }
+      },
+    },
+  },
+  {
+    path: "/forgot-password-mobile",
+    name: "ForgotPasswordMobile",
+    component: () => import("../views/account/forgot-password-mobile.vue"),
+    meta: {
+      title: "Forgot Password",
+      beforeResolve(routeTo, routeFrom, next) {
+        // If the user is already logged in
+        if (store.getters["auth/loggedIn"]) {
+          // Redirect to the home page instead
+          next({ name: "default" });
+        } else {
+          // Continue to the login page
+          next();
+        }
+      },
+    },
+  },
+  {
+    path: "/reset-password",
+    name: "resetPassword",
+    component: () => import("../views/account/reset-password.vue"),
+    meta: {
+      title: "Reset Password",
       beforeResolve(routeTo, routeFrom, next) {
         // If the user is already logged in
         if (store.getters["auth/loggedIn"]) {
