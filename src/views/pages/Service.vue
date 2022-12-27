@@ -46,7 +46,8 @@ export default {
         },
         getPrice(prices) {
             var priceData = JSON.parse(prices)
-            return `One Time: ${priceData.onetime}, Monthly: ${priceData.onetime}, Quaterly: ${priceData.quaterly}, Yearly: ${priceData.yearly}`;
+            return priceData
+            // return `One Time: ${priceData.onetime}, Monthly: ${priceData.onetime}, Quaterly: ${priceData.quaterly}, Yearly: ${priceData.yearly}`;
         },
         nameInitials(name){
             var nameArray = name.split(" ");
@@ -83,8 +84,29 @@ export default {
   <Layout>
     <PageHeader :title="title" />
     <div class="row">
-      <div class="col-xxl-3 col-md-6 mb-3" v-for="(service,index) in services" :key="index">
-        <div class="card mb-2">
+      <div class="col-xxl-3 col-md-4 col-sm-6 col-xs-12 mb-3" v-for="(service,index) in services" :key="index">
+        <div class="card h-100">
+            <img class="service-image" v-if="service.service_image"  :src="getImage(service.service_image)" alt="Card image cap">
+            <div class="avatar-title rounded bg-soft-primary text-primary" v-else>{{nameInitials(service.title)}}</div>
+            <div class="card-body">
+                <h4 class="card-title mb-2">{{service.title}}</h4>
+                <p class="card-text" v-html="service.description"></p>
+            </div>
+            <div class="card-body border-top border-top-dashed pb-3">
+                <h6>Pricing:</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="btn rounded-pill btn-soft-primary btn-sm" v-if="getPrice(service.prices) && getPrice(service.prices)['onetime']">One Time: {{getPrice(service.prices)['onetime']}}</span>
+                    <span class="btn rounded-pill btn-soft-primary btn-sm" v-if="getPrice(service.prices) && getPrice(service.prices)['monthly']">monthly: {{getPrice(service.prices)['monthly']}}</span>
+                    <span class="btn rounded-pill btn-soft-primary btn-sm" v-if="getPrice(service.prices) && getPrice(service.prices)['quaterly']">Quaterly: {{getPrice(service.prices)['quaterly']}}</span>
+                    <span class="btn rounded-pill btn-soft-primary btn-sm" v-if="getPrice(service.prices) && getPrice(service.prices)['yearly']">Yearly: {{getPrice(service.prices)['yearly']}}</span>
+                </div>
+                <!-- <p>{{ getPrice(service.prices)}}</p> -->
+          </div>
+          <div class="card-footer text-end">
+                <a @click="buyService(service)" class="card-link link-secondary cursor-pointer">View Details <i class="ri-arrow-right-s-line ms-1 align-middle lh-1"></i></a>
+            </div>
+        </div>
+        <!-- <div class="card mb-2">
           <div class="card-body pb-0">
             <div class="d-flex mb-3 align-items-center">
               <div class="flex-shrink-0 avatar-lg">
@@ -112,7 +134,7 @@ export default {
                 <h6>Pricing:</h6>
                 <p>{{ getPrice(service.prices)}}</p>
           </div>
-        </div>
+        </div> -->
         <!--end card-->
       </div>
       <!--end col-->
@@ -124,7 +146,12 @@ export default {
 .service-image{
     width: 100%;
     height: 100%;
+    max-height: 200px;
     object-fit: cover;
     border-radius: 7px;
+}
+.avatar-title{
+  font-size: 60px;
+  max-height: 200px;
 }
 </style>

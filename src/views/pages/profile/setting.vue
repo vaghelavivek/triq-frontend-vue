@@ -665,8 +665,6 @@ import useVuelidate from "@vuelidate/core";
                               <th scope="col">Date</th>
                               <th scope="col">Comment</th>
                               <th scope="col">Attachment</th>
-                              <th scope="col">Send Email</th>
-                              <th scope="col">Personal Note</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -680,8 +678,6 @@ import useVuelidate from "@vuelidate/core";
                                 <a v-if="attachment.attachment" :href="`${assetUrl}/storage/${attachment.attachment}`" download="" target="_blank">Download</a>
                                 <span v-else>--</span>
                               </td>
-                              <td>{{attachment.is_send_email ? 'Yes' : 'No'}}</td>
-                              <td>{{attachment.is_personal_note ? 'Yes' : 'No'}}</td>
                             </tr>
                           </tbody>
                         </table>

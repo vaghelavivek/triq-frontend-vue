@@ -52,6 +52,7 @@ export default {
       active:false,
       isEdit: false,
       assetUrl: process.env.VUE_APP_ENVIRONMENT != 'local' ? process.env.VUE_APP_API_URL : process.env.VUE_APP_LOCAL_URL,
+      services :[]
     };
   },
   validations: {
@@ -106,6 +107,7 @@ export default {
     isUserOrderAdd(){
       return this.$route.name == "UserOrderAdd" ? true : false
     },
+    
   },
   mounted() {
     if ((this.$route.name == "EditOrder" || this.$route.name == "UserOrderEdit") && this.$route.params.id) {
@@ -176,7 +178,7 @@ export default {
           if (res.data.status) {
             this.isSubmited = false;
             this.clearOrder();
-            this.$toast.success("Order added Successfully");
+            this.$toast.success("Order placed Successfully");
             this.$router.push({ name: "Orders" });
           }
           this.loader = false;
@@ -261,6 +263,7 @@ export default {
               };
               serData.push(payload);
             });
+            this.services = services
             this.servicesData = serData;
           } else {
             this.servicesData = [];
@@ -555,7 +558,17 @@ export default {
         link.click();
         link.remove();
       }
-     
+    },
+    getServiceName(serviceId){
+      // var serviceData = this.servicesData.find((service)=>{ service.id == serviceId})
+      const serviceData = this.services.find(({ service }) => service['id'] === serviceId);
+      console.log('sss',serviceData)
+
+      // if(serviceData){
+      //   return serviceData.name
+      // }
+      // return null
+      return serviceId
     }
   },
 };
@@ -570,7 +583,7 @@ export default {
       <div class="col-xl-12">
         <div class="card">
           <div class="card-header align-items-center d-flex">
-            <h4 class="card-title mb-0 flex-grow-1" @click="ClosePaytmPopup()">{{order.id ? 'Edit Order' : 'Add Order'}}</h4>
+            <h4 class="card-title mb-0 flex-grow-1" @click="ClosePaytmPopup()">{{order.id ? 'Edit Order' : 'Place Order'}}</h4>
           </div>
           <!-- end card header -->
           <div class="card-body">
@@ -614,7 +627,7 @@ export default {
                     <label for="title" class="form-label">Service Name</label>
                   </div>
                   <div class="col-lg-9">
-                    <Multiselect
+                    <!-- <Multiselect
                       v-model="order.service_id"
                       :close-on-select="true"
                       :searchable="true"
@@ -632,7 +645,8 @@ export default {
                       class="invalid-feedback"
                     >
                       <span v-if="item.$message">{{ item.$message }}</span>
-                    </div>
+                    </div> -->
+                    <!-- {{getServiceName(order.service_id)}} -->
                   </div>
                 </div>
 
@@ -806,7 +820,7 @@ export default {
                     @click="initPayment"
                     :disabled="disabled"
                   >
-                    Add Order
+                    Place Order
                     <div
                     class="spinner-border loader-setup"
                     role="status"
@@ -823,7 +837,7 @@ export default {
                     @click="updateOrderData"
                     :disabled="disabled"
                   >
-                    {{isEdit ? 'Update Order' : 'Add Order'}} 
+                    {{isEdit ? 'Update Order' : 'Place Order'}} 
                     <div
                     class="spinner-border loader-setup"
                     role="status"
@@ -840,7 +854,7 @@ export default {
                     @click="saveOrder"
                     :disabled="disabled"
                   >
-                    {{isEdit ? 'Update Order' : 'Add Order'}} 
+                    {{isEdit ? 'Update Order' : 'Place Order'}} 
                     <div
                     class="spinner-border loader-setup"
                     role="status"
@@ -913,7 +927,7 @@ export default {
                           >
                             <td>{{ getDate(comment.created_at) }}</td>
                             <td>{{ comment.notes }}</td>
-                            <td>Download</td>
+                            <td><a class="cursor-pointer" @click="downloadFile(`${assetUrl}/storage/${comment.attachment}`)">Download</a></td>
                             <td>
                               {{
                                 comment.user && comment.user.name
