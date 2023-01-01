@@ -77,4 +77,19 @@ export const actions = {
   async setUserData({commit}, data) {
     commit('SET_USER',data)
   },
+  // eslint-disable-next-line no-empty-pattern
+  async sendResetPasswordLink({}, data) {
+    let resp = await axios.post('/api/send-email-reset-link', data)
+    return resp;
+  },
+  // eslint-disable-next-line no-empty-pattern
+  async resetPassword({}, data) {
+    let resp = await axios.post('/api/reset-password', data)
+    return resp;
+  },
+  // eslint-disable-next-line no-empty-pattern
+  async resetPasswordMobile({}, data) {
+    let resp = await axios.post('/api/reset-password-mobile', data)
+    return resp;
+  },
 }

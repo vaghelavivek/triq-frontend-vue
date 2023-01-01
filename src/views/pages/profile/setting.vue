@@ -406,11 +406,11 @@ import useVuelidate from "@vuelidate/core";
 
                       <div class="row mb-4">
                         <div class="col-lg-3">
-                          <label for="password" class="form-label">Password</label>
+                          <label for="password" class="form-label">Change Password</label>
                         </div>
                         <div class="col-lg-9">
                           <input
-                            type="text"
+                            type="password"
                             class="form-control"
                             id="password"
                             placeholder="Enter your Password"

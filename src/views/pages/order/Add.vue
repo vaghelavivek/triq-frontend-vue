@@ -626,14 +626,13 @@ export default {
                   <div class="col-lg-3">
                     <label for="title" class="form-label">Service Name</label>
                   </div>
-                  <div class="col-lg-9">
-                    <!-- <Multiselect
+                  <div class="col-lg-9" v-if="((!isServiceOrder || !isEdit))">
+                    <Multiselect
                       v-model="order.service_id"
                       :close-on-select="true"
                       :searchable="true"
                       :create-option="true"
                       :options="servicesData"
-                      :disabled="((isServiceOrder || isEdit) && !isAdmin)"
                       @select="getServiceDocumentData"
                       :class="{
                         'is-invalid': isSubmited && v$.order.service_id.$error,
@@ -645,8 +644,10 @@ export default {
                       class="invalid-feedback"
                     >
                       <span v-if="item.$message">{{ item.$message }}</span>
-                    </div> -->
-                    <!-- {{getServiceName(order.service_id)}} -->
+                    </div>
+                  </div>
+                  <div class="col-lg-9" v-else>
+                    {{selectedService && selectedService.title ? selectedService.title : ''}}
                   </div>
                 </div>
 
